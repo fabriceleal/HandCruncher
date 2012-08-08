@@ -6,6 +6,7 @@ handRaw=
 		h:hand wsNlStream
 		{ return h;}
 
+
 date=
 		year:number "/" month:number "/" day:number " " hour:number ":" minute:number ":" second:number " ET"
 		{ return { year:year, month:month, day:day, hour:hour, minute:minute, second:second}; }
@@ -20,8 +21,8 @@ tableType=
 	/	"2-max"
 
 tablePresentation=
-	"Table '" table:username "' " type:tableType " Seat #" buttonseat:number " is the button" wsNlStream
-	{ return { table:table, buttonseat:buttonseat, type:type}; }
+		"Table '" table:username "' " type:tableType " Seat #" buttonseat:number " is the button" wsNlStream
+		{ return { table:table, buttonseat:buttonseat, type:type}; }
 
 seatPresentation=
 		"Seat " seat:number ": " u:username "(" stack:value " in chips)" wsNlStream
@@ -34,6 +35,10 @@ postSBlind=
 postBBlind=
 		u:username ": posts big blind " v:value wsNlStream
 		{ return { tag:"postBBlind", value:v, user:u }; }
+
+postAnte=
+		u:username ": posts the ante " v:value wsNlStream
+		{ return { tag:"ante", value:v, user:u }; }
 
 card=
 		rank:([2-9] / [ATJQK]) suit:[schd]
@@ -77,15 +82,39 @@ action=
 		{ return { tag:"action", user:name, action:a}; }
 	/  "Uncalled bet (" v:value ") returned to " name:username wsNlStream
 		{ return { tag: "uncalled", value:v, to:name}; }
-	/	name:username ": doesn't show hand" wsNlStream
+	/	name:username ":" wsNlStream "doesn't show hand" wsNlStream
+		{ return { tag:"not_shows", user:name }; }
+	/	name:username ":" wsNlStream "mucks hand" wsNlStream
 		{ return { tag:"mucks", user:name }; }
-	/	name:username ": shows " hole:board " " rest:(!nl .)* wsNlStream
+	/	name:username ":" wsNlStream "shows " hole:board " " rest:(!nl .)* wsNlStream
 		{ return { tag:"shows", user:name, cards:hole, rest:rest.map(function(e){ return e[1];}).join('')}; }
-	/	name:username ": sits out" wsNlStream
-		{ return { tag:"sitsout", user:name }; }
+	/	name:username ":" wsNlStream  "sits out" wsNlStream
+		{ return { tag:"sits_out", user:name }; }
+	/	name:username ":" wsNlStream "is sitting out" wsNlStream
+		{ return { tag:"sitting_out", user:name }; }
+	/  name:username "#" seat:number wsNlStream
+		{
+			// (1)
+			var li = name.lastIndexOf("joins the table at seat");
+			if(li > -1 && li === name.length - 23){
+				return { tag:"joins", user:name.substring(0, li - 1).trimRight(), seat:seat };
+			} 
+
+			throw new Error("Invalid action! Matched '" + name + "' in (name:username \"#\" v:value wsNlStream)");
+		}
+	/	name:username ", " said:stringLiteral wsNlStream
+		{
+			// (1)
+			var li = name.lastIndexOf("said");
+			if(li > -1 && li === name.length - 4 /*length of "said"*/ ){
+				return { tag:"said", user:name.substring(0, li - 1).trimRight(), said:said };
+			}
+			
+			throw new Error("Invalid action! Matched '" + name + "' in (name:username \", \" said:stringLiteral wsNlStream)");
+		}
 	/ 	name:username v:value wsNlStream "from pot" wsNlStream
 		{
-			// 
+			// (1)
 			var li = name.lastIndexOf("collected");
 			if(li > -1 && li === name.length - 9 /*length of "collected"*/ ){
 				return { tag:"collects", user:name.substring(0, li - 1).trimRight(), value:v };
@@ -95,22 +124,32 @@ action=
 		}
 	/	name:username wsNlStream
 		{
-			// This one is really wtf... the username can contain spaces, so
-			// the string <username> leaves the table should be matched as a username, and then treated ... arg!!!
-			var li = name.lastIndexOf("leaves the table");			
-			if(li > -1 && li === name.length - 16 /*length of "leaves the table"*/ ){
-				return { tag:"leaves", user: name.substring(0, li - 1).trimRight() };
+			// (1)
+			var tests = [
+				{ str:"has timed out while disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
+				{ str:"leaves the table", toRet:function( u ){ return { tag:"leaves", user:u }}},
+				{ str:"will be allowed to play after the button", toRet:function( u ){ return { tag:"allowedAfterButton", user:u }}},
+				{ str:"was removed from the table for failing to post", toRet:function( u ){ return { tag:"removedAfterPostFail", user:u }}},
+				{ str:"is disconnected", toRet:function(u){ return { tag:"disconnected", user:u }}}
+			];
+
+			var li = -1;
+			for(var k in tests){
+				with(tests[k]){
+					li = name.lastIndexOf(str);
+					if(li > -1 && li === name.length - str.length){
+						return toRet( name.substring(0, li - 1).trimRight() );
+					}
+				}
 			}
 			
 			throw new Error("Invalid action! Matched '" + name + "' in (name:username wsNlStream)");
 		}
 
-
-list_actions=
-		end
-	/	action list_actions?
-end=
-
+/* 
+	(1) = These ones are really wtf... the username can contain spaces, so
+	string <username> leaves the table should be matched as a username, and then treated ... arg!!!
+*/
 
 streetName= "HOLE CARDS" / "FLOP" / "TURN" / "RIVER" / "SHOW DOWN"
 
@@ -141,6 +180,7 @@ summary=
 preflopAction =
 		postSBlind
 	/	postBBlind
+	/	postAnte
 	/	action
 
 preflop=preflopAction*
@@ -160,6 +200,9 @@ hand=
 	
 
 game="Hold'em No Limit"
+
+stringLiteral='"' c:(!'"' .)* '"'
+		{ return c.map(function(e){ return e[1];}).join(''); }
 
 stakes=
 		s:value "/" b:value " USD"

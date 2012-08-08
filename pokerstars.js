@@ -46,6 +46,7 @@ exports.parser = (function(){
         "seatPresentation": parse_seatPresentation,
         "postSBlind": parse_postSBlind,
         "postBBlind": parse_postBBlind,
+        "postAnte": parse_postAnte,
         "card": parse_card,
         "cardlist_tail": parse_cardlist_tail,
         "cardlist": parse_cardlist,
@@ -54,8 +55,6 @@ exports.parser = (function(){
         "board": parse_board,
         "action_atom": parse_action_atom,
         "action": parse_action,
-        "list_actions": parse_list_actions,
-        "end": parse_end,
         "streetName": parse_streetName,
         "street": parse_street,
         "summary_board": parse_summary_board,
@@ -64,6 +63,7 @@ exports.parser = (function(){
         "preflop": parse_preflop,
         "hand": parse_hand,
         "game": parse_game,
+        "stringLiteral": parse_stringLiteral,
         "stakes": parse_stakes,
         "username": parse_username,
         "usernamechar": parse_usernamechar,
@@ -934,6 +934,66 @@ exports.parser = (function(){
         return result0;
       }
       
+      function parse_postAnte() {
+        var cacheKey = "postAnte@" + pos.offset;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = clone(cachedResult.nextPos);
+          return cachedResult.result;
+        }
+        
+        var result0, result1, result2, result3;
+        var pos0, pos1;
+        
+        pos0 = clone(pos);
+        pos1 = clone(pos);
+        result0 = parse_username();
+        if (result0 !== null) {
+          if (input.substr(pos.offset, 17) === ": posts the ante ") {
+            result1 = ": posts the ante ";
+            advance(pos, 17);
+          } else {
+            result1 = null;
+            if (reportFailures === 0) {
+              matchFailed("\": posts the ante \"");
+            }
+          }
+          if (result1 !== null) {
+            result2 = parse_value();
+            if (result2 !== null) {
+              result3 = parse_wsNlStream();
+              if (result3 !== null) {
+                result0 = [result0, result1, result2, result3];
+              } else {
+                result0 = null;
+                pos = clone(pos1);
+              }
+            } else {
+              result0 = null;
+              pos = clone(pos1);
+            }
+          } else {
+            result0 = null;
+            pos = clone(pos1);
+          }
+        } else {
+          result0 = null;
+          pos = clone(pos1);
+        }
+        if (result0 !== null) {
+          result0 = (function(offset, line, column, u, v) { return { tag:"ante", value:v, user:u }; })(pos0.offset, pos0.line, pos0.column, result0[0], result0[2]);
+        }
+        if (result0 === null) {
+          pos = clone(pos0);
+        }
+        
+        cache[cacheKey] = {
+          nextPos: clone(pos),
+          result:  result0
+        };
+        return result0;
+      }
+      
       function parse_card() {
         var cacheKey = "card@" + pos.offset;
         var cachedResult = cache[cacheKey];
@@ -1464,7 +1524,7 @@ exports.parser = (function(){
           return cachedResult.result;
         }
         
-        var result0, result1, result2, result3, result4, result5, result6;
+        var result0, result1, result2, result3, result4, result5, result6, result7, result8;
         var pos0, pos1, pos2, pos3;
         
         pos0 = clone(pos);
@@ -1575,19 +1635,39 @@ exports.parser = (function(){
             pos1 = clone(pos);
             result0 = parse_username();
             if (result0 !== null) {
-              if (input.substr(pos.offset, 19) === ": doesn't show hand") {
-                result1 = ": doesn't show hand";
-                advance(pos, 19);
+              if (input.charCodeAt(pos.offset) === 58) {
+                result1 = ":";
+                advance(pos, 1);
               } else {
                 result1 = null;
                 if (reportFailures === 0) {
-                  matchFailed("\": doesn't show hand\"");
+                  matchFailed("\":\"");
                 }
               }
               if (result1 !== null) {
                 result2 = parse_wsNlStream();
                 if (result2 !== null) {
-                  result0 = [result0, result1, result2];
+                  if (input.substr(pos.offset, 17) === "doesn't show hand") {
+                    result3 = "doesn't show hand";
+                    advance(pos, 17);
+                  } else {
+                    result3 = null;
+                    if (reportFailures === 0) {
+                      matchFailed("\"doesn't show hand\"");
+                    }
+                  }
+                  if (result3 !== null) {
+                    result4 = parse_wsNlStream();
+                    if (result4 !== null) {
+                      result0 = [result0, result1, result2, result3, result4];
+                    } else {
+                      result0 = null;
+                      pos = clone(pos1);
+                    }
+                  } else {
+                    result0 = null;
+                    pos = clone(pos1);
+                  }
                 } else {
                   result0 = null;
                   pos = clone(pos1);
@@ -1601,7 +1681,7 @@ exports.parser = (function(){
               pos = clone(pos1);
             }
             if (result0 !== null) {
-              result0 = (function(offset, line, column, name) { return { tag:"mucks", user:name }; })(pos0.offset, pos0.line, pos0.column, result0[0]);
+              result0 = (function(offset, line, column, name) { return { tag:"not_shows", user:name }; })(pos0.offset, pos0.line, pos0.column, result0[0]);
             }
             if (result0 === null) {
               pos = clone(pos0);
@@ -1611,102 +1691,31 @@ exports.parser = (function(){
               pos1 = clone(pos);
               result0 = parse_username();
               if (result0 !== null) {
-                if (input.substr(pos.offset, 8) === ": shows ") {
-                  result1 = ": shows ";
-                  advance(pos, 8);
+                if (input.charCodeAt(pos.offset) === 58) {
+                  result1 = ":";
+                  advance(pos, 1);
                 } else {
                   result1 = null;
                   if (reportFailures === 0) {
-                    matchFailed("\": shows \"");
+                    matchFailed("\":\"");
                   }
                 }
                 if (result1 !== null) {
-                  result2 = parse_board();
+                  result2 = parse_wsNlStream();
                   if (result2 !== null) {
-                    if (input.charCodeAt(pos.offset) === 32) {
-                      result3 = " ";
-                      advance(pos, 1);
+                    if (input.substr(pos.offset, 10) === "mucks hand") {
+                      result3 = "mucks hand";
+                      advance(pos, 10);
                     } else {
                       result3 = null;
                       if (reportFailures === 0) {
-                        matchFailed("\" \"");
+                        matchFailed("\"mucks hand\"");
                       }
                     }
                     if (result3 !== null) {
-                      result4 = [];
-                      pos2 = clone(pos);
-                      pos3 = clone(pos);
-                      reportFailures++;
-                      result5 = parse_nl();
-                      reportFailures--;
-                      if (result5 === null) {
-                        result5 = "";
-                      } else {
-                        result5 = null;
-                        pos = clone(pos3);
-                      }
-                      if (result5 !== null) {
-                        if (input.length > pos.offset) {
-                          result6 = input.charAt(pos.offset);
-                          advance(pos, 1);
-                        } else {
-                          result6 = null;
-                          if (reportFailures === 0) {
-                            matchFailed("any character");
-                          }
-                        }
-                        if (result6 !== null) {
-                          result5 = [result5, result6];
-                        } else {
-                          result5 = null;
-                          pos = clone(pos2);
-                        }
-                      } else {
-                        result5 = null;
-                        pos = clone(pos2);
-                      }
-                      while (result5 !== null) {
-                        result4.push(result5);
-                        pos2 = clone(pos);
-                        pos3 = clone(pos);
-                        reportFailures++;
-                        result5 = parse_nl();
-                        reportFailures--;
-                        if (result5 === null) {
-                          result5 = "";
-                        } else {
-                          result5 = null;
-                          pos = clone(pos3);
-                        }
-                        if (result5 !== null) {
-                          if (input.length > pos.offset) {
-                            result6 = input.charAt(pos.offset);
-                            advance(pos, 1);
-                          } else {
-                            result6 = null;
-                            if (reportFailures === 0) {
-                              matchFailed("any character");
-                            }
-                          }
-                          if (result6 !== null) {
-                            result5 = [result5, result6];
-                          } else {
-                            result5 = null;
-                            pos = clone(pos2);
-                          }
-                        } else {
-                          result5 = null;
-                          pos = clone(pos2);
-                        }
-                      }
+                      result4 = parse_wsNlStream();
                       if (result4 !== null) {
-                        result5 = parse_wsNlStream();
-                        if (result5 !== null) {
-                          result0 = [result0, result1, result2, result3, result4, result5];
-                        } else {
-                          result0 = null;
-                          pos = clone(pos1);
-                        }
+                        result0 = [result0, result1, result2, result3, result4];
                       } else {
                         result0 = null;
                         pos = clone(pos1);
@@ -1728,7 +1737,7 @@ exports.parser = (function(){
                 pos = clone(pos1);
               }
               if (result0 !== null) {
-                result0 = (function(offset, line, column, name, hole, rest) { return { tag:"shows", user:name, cards:hole, rest:rest.map(function(e){ return e[1];}).join('')}; })(pos0.offset, pos0.line, pos0.column, result0[0], result0[2], result0[4]);
+                result0 = (function(offset, line, column, name) { return { tag:"mucks", user:name }; })(pos0.offset, pos0.line, pos0.column, result0[0]);
               }
               if (result0 === null) {
                 pos = clone(pos0);
@@ -1738,19 +1747,130 @@ exports.parser = (function(){
                 pos1 = clone(pos);
                 result0 = parse_username();
                 if (result0 !== null) {
-                  if (input.substr(pos.offset, 10) === ": sits out") {
-                    result1 = ": sits out";
-                    advance(pos, 10);
+                  if (input.charCodeAt(pos.offset) === 58) {
+                    result1 = ":";
+                    advance(pos, 1);
                   } else {
                     result1 = null;
                     if (reportFailures === 0) {
-                      matchFailed("\": sits out\"");
+                      matchFailed("\":\"");
                     }
                   }
                   if (result1 !== null) {
                     result2 = parse_wsNlStream();
                     if (result2 !== null) {
-                      result0 = [result0, result1, result2];
+                      if (input.substr(pos.offset, 6) === "shows ") {
+                        result3 = "shows ";
+                        advance(pos, 6);
+                      } else {
+                        result3 = null;
+                        if (reportFailures === 0) {
+                          matchFailed("\"shows \"");
+                        }
+                      }
+                      if (result3 !== null) {
+                        result4 = parse_board();
+                        if (result4 !== null) {
+                          if (input.charCodeAt(pos.offset) === 32) {
+                            result5 = " ";
+                            advance(pos, 1);
+                          } else {
+                            result5 = null;
+                            if (reportFailures === 0) {
+                              matchFailed("\" \"");
+                            }
+                          }
+                          if (result5 !== null) {
+                            result6 = [];
+                            pos2 = clone(pos);
+                            pos3 = clone(pos);
+                            reportFailures++;
+                            result7 = parse_nl();
+                            reportFailures--;
+                            if (result7 === null) {
+                              result7 = "";
+                            } else {
+                              result7 = null;
+                              pos = clone(pos3);
+                            }
+                            if (result7 !== null) {
+                              if (input.length > pos.offset) {
+                                result8 = input.charAt(pos.offset);
+                                advance(pos, 1);
+                              } else {
+                                result8 = null;
+                                if (reportFailures === 0) {
+                                  matchFailed("any character");
+                                }
+                              }
+                              if (result8 !== null) {
+                                result7 = [result7, result8];
+                              } else {
+                                result7 = null;
+                                pos = clone(pos2);
+                              }
+                            } else {
+                              result7 = null;
+                              pos = clone(pos2);
+                            }
+                            while (result7 !== null) {
+                              result6.push(result7);
+                              pos2 = clone(pos);
+                              pos3 = clone(pos);
+                              reportFailures++;
+                              result7 = parse_nl();
+                              reportFailures--;
+                              if (result7 === null) {
+                                result7 = "";
+                              } else {
+                                result7 = null;
+                                pos = clone(pos3);
+                              }
+                              if (result7 !== null) {
+                                if (input.length > pos.offset) {
+                                  result8 = input.charAt(pos.offset);
+                                  advance(pos, 1);
+                                } else {
+                                  result8 = null;
+                                  if (reportFailures === 0) {
+                                    matchFailed("any character");
+                                  }
+                                }
+                                if (result8 !== null) {
+                                  result7 = [result7, result8];
+                                } else {
+                                  result7 = null;
+                                  pos = clone(pos2);
+                                }
+                              } else {
+                                result7 = null;
+                                pos = clone(pos2);
+                              }
+                            }
+                            if (result6 !== null) {
+                              result7 = parse_wsNlStream();
+                              if (result7 !== null) {
+                                result0 = [result0, result1, result2, result3, result4, result5, result6, result7];
+                              } else {
+                                result0 = null;
+                                pos = clone(pos1);
+                              }
+                            } else {
+                              result0 = null;
+                              pos = clone(pos1);
+                            }
+                          } else {
+                            result0 = null;
+                            pos = clone(pos1);
+                          }
+                        } else {
+                          result0 = null;
+                          pos = clone(pos1);
+                        }
+                      } else {
+                        result0 = null;
+                        pos = clone(pos1);
+                      }
                     } else {
                       result0 = null;
                       pos = clone(pos1);
@@ -1764,7 +1884,7 @@ exports.parser = (function(){
                   pos = clone(pos1);
                 }
                 if (result0 !== null) {
-                  result0 = (function(offset, line, column, name) { return { tag:"sitsout", user:name }; })(pos0.offset, pos0.line, pos0.column, result0[0]);
+                  result0 = (function(offset, line, column, name, hole, rest) { return { tag:"shows", user:name, cards:hole, rest:rest.map(function(e){ return e[1];}).join('')}; })(pos0.offset, pos0.line, pos0.column, result0[0], result0[4], result0[6]);
                 }
                 if (result0 === null) {
                   pos = clone(pos0);
@@ -1774,17 +1894,25 @@ exports.parser = (function(){
                   pos1 = clone(pos);
                   result0 = parse_username();
                   if (result0 !== null) {
-                    result1 = parse_value();
+                    if (input.charCodeAt(pos.offset) === 58) {
+                      result1 = ":";
+                      advance(pos, 1);
+                    } else {
+                      result1 = null;
+                      if (reportFailures === 0) {
+                        matchFailed("\":\"");
+                      }
+                    }
                     if (result1 !== null) {
                       result2 = parse_wsNlStream();
                       if (result2 !== null) {
-                        if (input.substr(pos.offset, 8) === "from pot") {
-                          result3 = "from pot";
+                        if (input.substr(pos.offset, 8) === "sits out") {
+                          result3 = "sits out";
                           advance(pos, 8);
                         } else {
                           result3 = null;
                           if (reportFailures === 0) {
-                            matchFailed("\"from pot\"");
+                            matchFailed("\"sits out\"");
                           }
                         }
                         if (result3 !== null) {
@@ -1812,15 +1940,7 @@ exports.parser = (function(){
                     pos = clone(pos1);
                   }
                   if (result0 !== null) {
-                    result0 = (function(offset, line, column, name, v) {
-                  			// 
-                  			var li = name.lastIndexOf("collected");
-                  			if(li > -1 && li === name.length - 9 /*length of "collected"*/ ){
-                  				return { tag:"collects", user:name.substring(0, li - 1).trimRight(), value:v };
-                  			}
-                  			
-                  			throw new Error("Invalid action! Matched '" + name + "' (name:username v:value wsNlStream \"from pot\" wsNlStream)");
-                  		})(pos0.offset, pos0.line, pos0.column, result0[0], result0[1]);
+                    result0 = (function(offset, line, column, name) { return { tag:"sits_out", user:name }; })(pos0.offset, pos0.line, pos0.column, result0[0]);
                   }
                   if (result0 === null) {
                     pos = clone(pos0);
@@ -1830,9 +1950,43 @@ exports.parser = (function(){
                     pos1 = clone(pos);
                     result0 = parse_username();
                     if (result0 !== null) {
-                      result1 = parse_wsNlStream();
+                      if (input.charCodeAt(pos.offset) === 58) {
+                        result1 = ":";
+                        advance(pos, 1);
+                      } else {
+                        result1 = null;
+                        if (reportFailures === 0) {
+                          matchFailed("\":\"");
+                        }
+                      }
                       if (result1 !== null) {
-                        result0 = [result0, result1];
+                        result2 = parse_wsNlStream();
+                        if (result2 !== null) {
+                          if (input.substr(pos.offset, 14) === "is sitting out") {
+                            result3 = "is sitting out";
+                            advance(pos, 14);
+                          } else {
+                            result3 = null;
+                            if (reportFailures === 0) {
+                              matchFailed("\"is sitting out\"");
+                            }
+                          }
+                          if (result3 !== null) {
+                            result4 = parse_wsNlStream();
+                            if (result4 !== null) {
+                              result0 = [result0, result1, result2, result3, result4];
+                            } else {
+                              result0 = null;
+                              pos = clone(pos1);
+                            }
+                          } else {
+                            result0 = null;
+                            pos = clone(pos1);
+                          }
+                        } else {
+                          result0 = null;
+                          pos = clone(pos1);
+                        }
                       } else {
                         result0 = null;
                         pos = clone(pos1);
@@ -1842,19 +1996,213 @@ exports.parser = (function(){
                       pos = clone(pos1);
                     }
                     if (result0 !== null) {
-                      result0 = (function(offset, line, column, name) {
-                    			// This one is really wtf... the username can contain spaces, so
-                    			// the string <username> leaves the table should be matched as a username, and then treated ... arg!!!
-                    			var li = name.lastIndexOf("leaves the table");			
-                    			if(li > -1 && li === name.length - 16 /*length of "leaves the table"*/ ){
-                    				return { tag:"leaves", user: name.substring(0, li - 1).trimRight() };
-                    			}
-                    			
-                    			throw new Error("Invalid action! Matched '" + name + "' in (name:username wsNlStream)");
-                    		})(pos0.offset, pos0.line, pos0.column, result0[0]);
+                      result0 = (function(offset, line, column, name) { return { tag:"sitting_out", user:name }; })(pos0.offset, pos0.line, pos0.column, result0[0]);
                     }
                     if (result0 === null) {
                       pos = clone(pos0);
+                    }
+                    if (result0 === null) {
+                      pos0 = clone(pos);
+                      pos1 = clone(pos);
+                      result0 = parse_username();
+                      if (result0 !== null) {
+                        if (input.charCodeAt(pos.offset) === 35) {
+                          result1 = "#";
+                          advance(pos, 1);
+                        } else {
+                          result1 = null;
+                          if (reportFailures === 0) {
+                            matchFailed("\"#\"");
+                          }
+                        }
+                        if (result1 !== null) {
+                          result2 = parse_number();
+                          if (result2 !== null) {
+                            result3 = parse_wsNlStream();
+                            if (result3 !== null) {
+                              result0 = [result0, result1, result2, result3];
+                            } else {
+                              result0 = null;
+                              pos = clone(pos1);
+                            }
+                          } else {
+                            result0 = null;
+                            pos = clone(pos1);
+                          }
+                        } else {
+                          result0 = null;
+                          pos = clone(pos1);
+                        }
+                      } else {
+                        result0 = null;
+                        pos = clone(pos1);
+                      }
+                      if (result0 !== null) {
+                        result0 = (function(offset, line, column, name, seat) {
+                      			// (1)
+                      			var li = name.lastIndexOf("joins the table at seat");
+                      			if(li > -1 && li === name.length - 23){
+                      				return { tag:"joins", user:name.substring(0, li - 1).trimRight(), seat:seat };
+                      			} 
+                      
+                      			throw new Error("Invalid action! Matched '" + name + "' in (name:username \"#\" v:value wsNlStream)");
+                      		})(pos0.offset, pos0.line, pos0.column, result0[0], result0[2]);
+                      }
+                      if (result0 === null) {
+                        pos = clone(pos0);
+                      }
+                      if (result0 === null) {
+                        pos0 = clone(pos);
+                        pos1 = clone(pos);
+                        result0 = parse_username();
+                        if (result0 !== null) {
+                          if (input.substr(pos.offset, 2) === ", ") {
+                            result1 = ", ";
+                            advance(pos, 2);
+                          } else {
+                            result1 = null;
+                            if (reportFailures === 0) {
+                              matchFailed("\", \"");
+                            }
+                          }
+                          if (result1 !== null) {
+                            result2 = parse_stringLiteral();
+                            if (result2 !== null) {
+                              result3 = parse_wsNlStream();
+                              if (result3 !== null) {
+                                result0 = [result0, result1, result2, result3];
+                              } else {
+                                result0 = null;
+                                pos = clone(pos1);
+                              }
+                            } else {
+                              result0 = null;
+                              pos = clone(pos1);
+                            }
+                          } else {
+                            result0 = null;
+                            pos = clone(pos1);
+                          }
+                        } else {
+                          result0 = null;
+                          pos = clone(pos1);
+                        }
+                        if (result0 !== null) {
+                          result0 = (function(offset, line, column, name, said) {
+                        			// (1)
+                        			var li = name.lastIndexOf("said");
+                        			if(li > -1 && li === name.length - 4 /*length of "said"*/ ){
+                        				return { tag:"said", user:name.substring(0, li - 1).trimRight(), said:said };
+                        			}
+                        			
+                        			throw new Error("Invalid action! Matched '" + name + "' in (name:username \", \" said:stringLiteral wsNlStream)");
+                        		})(pos0.offset, pos0.line, pos0.column, result0[0], result0[2]);
+                        }
+                        if (result0 === null) {
+                          pos = clone(pos0);
+                        }
+                        if (result0 === null) {
+                          pos0 = clone(pos);
+                          pos1 = clone(pos);
+                          result0 = parse_username();
+                          if (result0 !== null) {
+                            result1 = parse_value();
+                            if (result1 !== null) {
+                              result2 = parse_wsNlStream();
+                              if (result2 !== null) {
+                                if (input.substr(pos.offset, 8) === "from pot") {
+                                  result3 = "from pot";
+                                  advance(pos, 8);
+                                } else {
+                                  result3 = null;
+                                  if (reportFailures === 0) {
+                                    matchFailed("\"from pot\"");
+                                  }
+                                }
+                                if (result3 !== null) {
+                                  result4 = parse_wsNlStream();
+                                  if (result4 !== null) {
+                                    result0 = [result0, result1, result2, result3, result4];
+                                  } else {
+                                    result0 = null;
+                                    pos = clone(pos1);
+                                  }
+                                } else {
+                                  result0 = null;
+                                  pos = clone(pos1);
+                                }
+                              } else {
+                                result0 = null;
+                                pos = clone(pos1);
+                              }
+                            } else {
+                              result0 = null;
+                              pos = clone(pos1);
+                            }
+                          } else {
+                            result0 = null;
+                            pos = clone(pos1);
+                          }
+                          if (result0 !== null) {
+                            result0 = (function(offset, line, column, name, v) {
+                          			// (1)
+                          			var li = name.lastIndexOf("collected");
+                          			if(li > -1 && li === name.length - 9 /*length of "collected"*/ ){
+                          				return { tag:"collects", user:name.substring(0, li - 1).trimRight(), value:v };
+                          			}
+                          			
+                          			throw new Error("Invalid action! Matched '" + name + "' (name:username v:value wsNlStream \"from pot\" wsNlStream)");
+                          		})(pos0.offset, pos0.line, pos0.column, result0[0], result0[1]);
+                          }
+                          if (result0 === null) {
+                            pos = clone(pos0);
+                          }
+                          if (result0 === null) {
+                            pos0 = clone(pos);
+                            pos1 = clone(pos);
+                            result0 = parse_username();
+                            if (result0 !== null) {
+                              result1 = parse_wsNlStream();
+                              if (result1 !== null) {
+                                result0 = [result0, result1];
+                              } else {
+                                result0 = null;
+                                pos = clone(pos1);
+                              }
+                            } else {
+                              result0 = null;
+                              pos = clone(pos1);
+                            }
+                            if (result0 !== null) {
+                              result0 = (function(offset, line, column, name) {
+                            			// (1)
+                            			var tests = [
+                            				{ str:"has timed out while disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
+                            				{ str:"leaves the table", toRet:function( u ){ return { tag:"leaves", user:u }}},
+                            				{ str:"will be allowed to play after the button", toRet:function( u ){ return { tag:"allowedAfterButton", user:u }}},
+                            				{ str:"was removed from the table for failing to post", toRet:function( u ){ return { tag:"removedAfterPostFail", user:u }}},
+                            				{ str:"is disconnected", toRet:function(u){ return { tag:"disconnected", user:u }}}
+                            			];
+                            
+                            			var li = -1;
+                            			for(var k in tests){
+                            				with(tests[k]){
+                            					li = name.lastIndexOf(str);
+                            					if(li > -1 && li === name.length - str.length){
+                            						return toRet( name.substring(0, li - 1).trimRight() );
+                            					}
+                            				}
+                            			}
+                            			
+                            			throw new Error("Invalid action! Matched '" + name + "' in (name:username wsNlStream)");
+                            		})(pos0.offset, pos0.line, pos0.column, result0[0]);
+                            }
+                            if (result0 === null) {
+                              pos = clone(pos0);
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -1862,64 +2210,6 @@ exports.parser = (function(){
             }
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function parse_list_actions() {
-        var cacheKey = "list_actions@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
-        var result0, result1;
-        var pos0;
-        
-        result0 = parse_end();
-        if (result0 === null) {
-          pos0 = clone(pos);
-          result0 = parse_action();
-          if (result0 !== null) {
-            result1 = parse_list_actions();
-            result1 = result1 !== null ? result1 : "";
-            if (result1 !== null) {
-              result0 = [result0, result1];
-            } else {
-              result0 = null;
-              pos = clone(pos0);
-            }
-          } else {
-            result0 = null;
-            pos = clone(pos0);
-          }
-        }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
-        return result0;
-      }
-      
-      function parse_end() {
-        var cacheKey = "end@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
-        var result0;
-        var pos0;
-        
-        pos0 = clone(pos);
-        result0 = [];
         
         cache[cacheKey] = {
           nextPos: clone(pos),
@@ -2500,7 +2790,10 @@ exports.parser = (function(){
         if (result0 === null) {
           result0 = parse_postBBlind();
           if (result0 === null) {
-            result0 = parse_action();
+            result0 = parse_postAnte();
+            if (result0 === null) {
+              result0 = parse_action();
+            }
           }
         }
         
@@ -2640,6 +2933,149 @@ exports.parser = (function(){
           if (reportFailures === 0) {
             matchFailed("\"Hold'em No Limit\"");
           }
+        }
+        
+        cache[cacheKey] = {
+          nextPos: clone(pos),
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_stringLiteral() {
+        var cacheKey = "stringLiteral@" + pos.offset;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = clone(cachedResult.nextPos);
+          return cachedResult.result;
+        }
+        
+        var result0, result1, result2, result3;
+        var pos0, pos1, pos2, pos3;
+        
+        pos0 = clone(pos);
+        pos1 = clone(pos);
+        if (input.charCodeAt(pos.offset) === 34) {
+          result0 = "\"";
+          advance(pos, 1);
+        } else {
+          result0 = null;
+          if (reportFailures === 0) {
+            matchFailed("\"\\\"\"");
+          }
+        }
+        if (result0 !== null) {
+          result1 = [];
+          pos2 = clone(pos);
+          pos3 = clone(pos);
+          reportFailures++;
+          if (input.charCodeAt(pos.offset) === 34) {
+            result2 = "\"";
+            advance(pos, 1);
+          } else {
+            result2 = null;
+            if (reportFailures === 0) {
+              matchFailed("\"\\\"\"");
+            }
+          }
+          reportFailures--;
+          if (result2 === null) {
+            result2 = "";
+          } else {
+            result2 = null;
+            pos = clone(pos3);
+          }
+          if (result2 !== null) {
+            if (input.length > pos.offset) {
+              result3 = input.charAt(pos.offset);
+              advance(pos, 1);
+            } else {
+              result3 = null;
+              if (reportFailures === 0) {
+                matchFailed("any character");
+              }
+            }
+            if (result3 !== null) {
+              result2 = [result2, result3];
+            } else {
+              result2 = null;
+              pos = clone(pos2);
+            }
+          } else {
+            result2 = null;
+            pos = clone(pos2);
+          }
+          while (result2 !== null) {
+            result1.push(result2);
+            pos2 = clone(pos);
+            pos3 = clone(pos);
+            reportFailures++;
+            if (input.charCodeAt(pos.offset) === 34) {
+              result2 = "\"";
+              advance(pos, 1);
+            } else {
+              result2 = null;
+              if (reportFailures === 0) {
+                matchFailed("\"\\\"\"");
+              }
+            }
+            reportFailures--;
+            if (result2 === null) {
+              result2 = "";
+            } else {
+              result2 = null;
+              pos = clone(pos3);
+            }
+            if (result2 !== null) {
+              if (input.length > pos.offset) {
+                result3 = input.charAt(pos.offset);
+                advance(pos, 1);
+              } else {
+                result3 = null;
+                if (reportFailures === 0) {
+                  matchFailed("any character");
+                }
+              }
+              if (result3 !== null) {
+                result2 = [result2, result3];
+              } else {
+                result2 = null;
+                pos = clone(pos2);
+              }
+            } else {
+              result2 = null;
+              pos = clone(pos2);
+            }
+          }
+          if (result1 !== null) {
+            if (input.charCodeAt(pos.offset) === 34) {
+              result2 = "\"";
+              advance(pos, 1);
+            } else {
+              result2 = null;
+              if (reportFailures === 0) {
+                matchFailed("\"\\\"\"");
+              }
+            }
+            if (result2 !== null) {
+              result0 = [result0, result1, result2];
+            } else {
+              result0 = null;
+              pos = clone(pos1);
+            }
+          } else {
+            result0 = null;
+            pos = clone(pos1);
+          }
+        } else {
+          result0 = null;
+          pos = clone(pos1);
+        }
+        if (result0 !== null) {
+          result0 = (function(offset, line, column, c) { return c.map(function(e){ return e[1];}).join(''); })(pos0.offset, pos0.line, pos0.column, result0[1]);
+        }
+        if (result0 === null) {
+          pos = clone(pos0);
         }
         
         cache[cacheKey] = {
