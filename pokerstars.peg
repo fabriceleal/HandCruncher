@@ -206,7 +206,7 @@ stringLiteral='"' c:(!'"' .)* '"'
 		{ return c.map(function(e){ return e[1];}).join(''); }
 
 currency="USD" / "EUR"
-currencySymbol= "$" / "€" // "%u20AC"
+currencySymbol= "$" / "€" // "\u20AC"
 
 stakes=
 		s:value "/" b:value " " c:currency
@@ -216,7 +216,8 @@ username=
 		cs:usernamechar+
 		{ return cs.join('').trimRight(); }
 
-usernamechar=[a-zA-Z0-9!_\.€ ]
+// FIXME Putting currencies here breaks the <user> collected $/€<nbr> from pot. Why? - Because it matches also the value !!!
+usernamechar=[a-zA-Z0-9!_\.€$ ]
 
 digits=[0-9]
 number=
@@ -224,9 +225,9 @@ number=
 		{ return new Number(d.join('')); }
 
 value=
-		s:currencySymbol d:digits+ "." d2:digits+
+		s:currencySymbol? d:digits+ "." d2:digits+
 		{ return new Number(d.join('') + '.' + d2.join('')); }
-	/	s:currencySymbol n:number
+	/	s:currencySymbol? n:number
 		{ return n; }
 
 wsNlStream	= wsNl*

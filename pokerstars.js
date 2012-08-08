@@ -90,7 +90,6 @@ exports.parser = (function(){
       var reportFailures = 0;
       var rightmostFailuresPos = { offset: 0, line: 1, column: 1, seenCR: false };
       var rightmostFailuresExpected = [];
-      var cache = {};
       
       function padLeft(input, padding, length) {
         var result = input;
@@ -163,13 +162,6 @@ exports.parser = (function(){
       }
       
       function parse_program() {
-        var cacheKey = "program@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2;
         var pos0, pos1;
         
@@ -203,22 +195,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_handRaw() {
-        var cacheKey = "handRaw@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1;
         var pos0, pos1;
         
@@ -243,22 +223,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_date() {
-        var cacheKey = "date@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3, result4, result5, result6, result7, result8, result9, result10, result11;
         var pos0, pos1;
         
@@ -391,22 +359,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_handPresentation() {
-        var cacheKey = "handPresentation@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13;
         var pos0, pos1;
         
@@ -543,22 +499,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_tableType() {
-        var cacheKey = "tableType@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0;
         
         if (input.substr(pos.offset, 5) === "6-max") {
@@ -592,22 +536,10 @@ exports.parser = (function(){
             }
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_tablePresentation() {
-        var cacheKey = "tablePresentation@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3, result4, result5, result6, result7;
         var pos0, pos1;
         
@@ -700,22 +632,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_seatPresentation() {
-        var cacheKey = "seatPresentation@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3, result4, result5, result6, result7;
         var pos0, pos1;
         
@@ -808,22 +728,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_postSBlind() {
-        var cacheKey = "postSBlind@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3;
         var pos0, pos1;
         
@@ -868,22 +776,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_postBBlind() {
-        var cacheKey = "postBBlind@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3;
         var pos0, pos1;
         
@@ -928,22 +824,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_postAnte() {
-        var cacheKey = "postAnte@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3;
         var pos0, pos1;
         
@@ -988,22 +872,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_card() {
-        var cacheKey = "card@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1;
         var pos0, pos1;
         
@@ -1055,22 +927,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_cardlist_tail() {
-        var cacheKey = "cardlist_tail@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1;
         var pos0, pos1;
         
@@ -1095,22 +955,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_cardlist() {
-        var cacheKey = "cardlist@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3;
         var pos0, pos1;
         
@@ -1146,22 +994,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_boardlist_tail() {
-        var cacheKey = "boardlist_tail@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1;
         var pos0, pos1;
         
@@ -1186,22 +1022,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_boardlist() {
-        var cacheKey = "boardlist@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3;
         var pos0, pos1;
         
@@ -1237,22 +1061,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_board() {
-        var cacheKey = "board@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2;
         var pos0, pos1;
         
@@ -1299,22 +1111,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_action_atom() {
-        var cacheKey = "action_atom@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3, result4;
         var pos0, pos1;
         
@@ -1510,22 +1310,10 @@ exports.parser = (function(){
             }
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_action() {
-        var cacheKey = "action@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3, result4, result5, result6;
         var pos0, pos1, pos2, pos3;
         
@@ -2107,22 +1895,10 @@ exports.parser = (function(){
             }
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_streetName() {
-        var cacheKey = "streetName@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0;
         
         if (input.substr(pos.offset, 10) === "HOLE CARDS") {
@@ -2178,22 +1954,10 @@ exports.parser = (function(){
             }
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_street() {
-        var cacheKey = "street@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3, result4, result5, result6;
         var pos0, pos1;
         
@@ -2264,22 +2028,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_summary_board() {
-        var cacheKey = "summary_board@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2;
         var pos0, pos1;
         
@@ -2318,22 +2070,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_summary() {
-        var cacheKey = "summary@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13, result14;
         var pos0, pos1, pos2, pos3, pos4;
         
@@ -2665,22 +2405,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_preflopAction() {
-        var cacheKey = "preflopAction@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0;
         
         result0 = parse_postSBlind();
@@ -2693,22 +2421,10 @@ exports.parser = (function(){
             }
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_preflop() {
-        var cacheKey = "preflop@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1;
         
         result0 = [];
@@ -2717,22 +2433,10 @@ exports.parser = (function(){
           result0.push(result1);
           result1 = parse_preflopAction();
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_hand() {
-        var cacheKey = "hand@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3, result4, result5;
         var pos0, pos1;
         
@@ -2804,22 +2508,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_game() {
-        var cacheKey = "game@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0;
         
         if (input.substr(pos.offset, 16) === "Hold'em No Limit") {
@@ -2831,22 +2523,10 @@ exports.parser = (function(){
             matchFailed("\"Hold'em No Limit\"");
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_stringLiteral() {
-        var cacheKey = "stringLiteral@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3;
         var pos0, pos1, pos2, pos3;
         
@@ -2974,22 +2654,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_currency() {
-        var cacheKey = "currency@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0;
         
         if (input.substr(pos.offset, 3) === "USD") {
@@ -3012,22 +2680,10 @@ exports.parser = (function(){
             }
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_currencySymbol() {
-        var cacheKey = "currencySymbol@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0;
         
         if (input.charCodeAt(pos.offset) === 36) {
@@ -3050,22 +2706,10 @@ exports.parser = (function(){
             }
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_stakes() {
-        var cacheKey = "stakes@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3, result4;
         var pos0, pos1;
         
@@ -3124,22 +2768,10 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_username() {
-        var cacheKey = "username@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1;
         var pos0;
         
@@ -3160,49 +2792,25 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_usernamechar() {
-        var cacheKey = "usernamechar@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0;
         
-        if (/^[a-zA-Z0-9!_.\u20AC ]/.test(input.charAt(pos.offset))) {
+        if (/^[a-zA-Z0-9!_.\u20AC$ ]/.test(input.charAt(pos.offset))) {
           result0 = input.charAt(pos.offset);
           advance(pos, 1);
         } else {
           result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[a-zA-Z0-9!_.\\u20AC ]");
+            matchFailed("[a-zA-Z0-9!_.\\u20AC$ ]");
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_digits() {
-        var cacheKey = "digits@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0;
         
         if (/^[0-9]/.test(input.charAt(pos.offset))) {
@@ -3214,22 +2822,10 @@ exports.parser = (function(){
             matchFailed("[0-9]");
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_number() {
-        var cacheKey = "number@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1;
         var pos0;
         
@@ -3250,28 +2846,17 @@ exports.parser = (function(){
         if (result0 === null) {
           pos = clone(pos0);
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_value() {
-        var cacheKey = "value@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1, result2, result3, result4;
         var pos0, pos1;
         
         pos0 = clone(pos);
         pos1 = clone(pos);
         result0 = parse_currencySymbol();
+        result0 = result0 !== null ? result0 : "";
         if (result0 !== null) {
           result2 = parse_digits();
           if (result2 !== null) {
@@ -3332,6 +2917,7 @@ exports.parser = (function(){
           pos0 = clone(pos);
           pos1 = clone(pos);
           result0 = parse_currencySymbol();
+          result0 = result0 !== null ? result0 : "";
           if (result0 !== null) {
             result1 = parse_number();
             if (result1 !== null) {
@@ -3351,22 +2937,10 @@ exports.parser = (function(){
             pos = clone(pos0);
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_wsNlStream() {
-        var cacheKey = "wsNlStream@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0, result1;
         
         result0 = [];
@@ -3375,44 +2949,20 @@ exports.parser = (function(){
           result0.push(result1);
           result1 = parse_wsNl();
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_wsNl() {
-        var cacheKey = "wsNl@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0;
         
         result0 = parse_ws();
         if (result0 === null) {
           result0 = parse_nl();
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_ws() {
-        var cacheKey = "ws@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0;
         
         if (/^[ \/w\/s\/t]/.test(input.charAt(pos.offset))) {
@@ -3424,22 +2974,10 @@ exports.parser = (function(){
             matchFailed("[ \\/w\\/s\\/t]");
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
       function parse_nl() {
-        var cacheKey = "nl@" + pos.offset;
-        var cachedResult = cache[cacheKey];
-        if (cachedResult) {
-          pos = clone(cachedResult.nextPos);
-          return cachedResult.result;
-        }
-        
         var result0;
         
         if (input.charCodeAt(pos.offset) === 10) {
@@ -3473,11 +3011,6 @@ exports.parser = (function(){
             }
           }
         }
-        
-        cache[cacheKey] = {
-          nextPos: clone(pos),
-          result:  result0
-        };
         return result0;
       }
       
