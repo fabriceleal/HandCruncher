@@ -82,15 +82,15 @@ action=
 		{ return { tag:"action", user:name, action:a}; }
 	/  "Uncalled bet (" v:value ") returned to " name:username wsNlStream
 		{ return { tag: "uncalled", value:v, to:name}; }
-	/	name:username ":" wsNlStream "doesn't show hand" wsNlStream
+	/	name:username ": doesn't show hand" wsNlStream
 		{ return { tag:"not_shows", user:name }; }
-	/	name:username ":" wsNlStream "mucks hand" wsNlStream
+	/	name:username ": mucks hand" wsNlStream
 		{ return { tag:"mucks", user:name }; }
-	/	name:username ":" wsNlStream "shows " hole:board " " rest:(!nl .)* wsNlStream
+	/	name:username ": shows " hole:board " " rest:(!nl .)* wsNlStream
 		{ return { tag:"shows", user:name, cards:hole, rest:rest.map(function(e){ return e[1];}).join('')}; }
-	/	name:username ":" wsNlStream  "sits out" wsNlStream
+	/	name:username ": sits out" wsNlStream
 		{ return { tag:"sits_out", user:name }; }
-	/	name:username ":" wsNlStream "is sitting out" wsNlStream
+	/	name:username ": is sitting out" wsNlStream
 		{ return { tag:"sitting_out", user:name }; }
 	/  name:username "#" seat:number wsNlStream
 		{
@@ -112,7 +112,7 @@ action=
 			
 			throw new Error("Invalid action! Matched '" + name + "' in (name:username \", \" said:stringLiteral wsNlStream)");
 		}
-	/ 	name:username v:value wsNlStream "from pot" wsNlStream
+	/ 	name:username v:value " from pot" wsNlStream
 		{
 			// (1)
 			var li = name.lastIndexOf("collected");
@@ -130,7 +130,8 @@ action=
 				{ str:"leaves the table", toRet:function( u ){ return { tag:"leaves", user:u }}},
 				{ str:"will be allowed to play after the button", toRet:function( u ){ return { tag:"allowedAfterButton", user:u }}},
 				{ str:"was removed from the table for failing to post", toRet:function( u ){ return { tag:"removedAfterPostFail", user:u }}},
-				{ str:"is disconnected", toRet:function(u){ return { tag:"disconnected", user:u }}}
+				{ str:"is disconnected", toRet:function(u){ return { tag:"disconnected", user:u }}},
+				{ str:"has timed out", toRet:function(u){ return { tag:"disconnected", user:u }}}
 			];
 
 			var li = -1;
@@ -204,15 +205,18 @@ game="Hold'em No Limit"
 stringLiteral='"' c:(!'"' .)* '"'
 		{ return c.map(function(e){ return e[1];}).join(''); }
 
+currency="USD" / "EUR"
+currencySymbol= "$" / "€" // "%u20AC"
+
 stakes=
-		s:value "/" b:value " USD"
-		{ return { small:s, big:b}; }
+		s:value "/" b:value " " c:currency
+		{ return { small:s, big:b, currency:c}; }
 
 username=
 		cs:usernamechar+
 		{ return cs.join('').trimRight(); }
 
-usernamechar=[a-zA-Z0-9!_\. ]
+usernamechar=[a-zA-Z0-9!_\.€ ]
 
 digits=[0-9]
 number=
@@ -220,9 +224,9 @@ number=
 		{ return new Number(d.join('')); }
 
 value=
-		"$" d:digits+ "." d2:digits+
+		s:currencySymbol d:digits+ "." d2:digits+
 		{ return new Number(d.join('') + '.' + d2.join('')); }
-	/	"$" n:number
+	/	s:currencySymbol n:number
 		{ return n; }
 
 wsNlStream	= wsNl*
