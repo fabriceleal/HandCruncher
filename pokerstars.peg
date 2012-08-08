@@ -1,0 +1,187 @@
+program=
+		wsNlStream hands:handRaw+
+		{ return hands; }
+
+handRaw=
+		h:hand wsNlStream
+		{ return h;}
+
+date=
+		year:number "/" month:number "/" day:number " " hour:number ":" minute:number ":" second:number " ET"
+		{ return { year:year, month:month, day:day, hour:hour, minute:minute, second:second}; }
+
+handPresentation=
+		"PokerStars Hand #" n:number ":" wsNlStream g:game wsNlStream "(" l:stakes ")" wsNlStream "-" wsNlStream d:date wsNlStream
+		{ return { number:n, game:g, stakes:l, date:d}; }
+
+tableType=
+		"6-max"
+	/	"10-max"
+	/	"2-max"
+
+tablePresentation=
+	"Table '" table:username "' " type:tableType " Seat #" buttonseat:number " is the button" wsNlStream
+	{ return { table:table, buttonseat:buttonseat, type:type}; }
+
+seatPresentation=
+		"Seat " seat:number ": " u:username "(" stack:value " in chips)" wsNlStream
+		{ return { seat:seat, name:u, stack:stack}; }
+
+postSBlind=
+		u:username ": posts small blind " v:value wsNlStream
+		{ return { tag:"postSBlind", value:v, user:u }; }
+
+postBBlind=
+		u:username ": posts big blind " v:value wsNlStream
+		{ return { tag:"postBBlind", value:v, user:u }; }
+
+card=
+		rank:([2-9] / [ATJQK]) suit:[schd]
+		{ return { rank:rank, suit:suit}; }
+
+cardlist_tail=
+		t:card wsNlStream
+		{ return t; }
+
+cardlist=
+		h:card wsNlStream t:cardlist_tail*
+		{ return [h].concat(t); }
+
+boardlist_tail=
+		t:boardlist wsNlStream
+		{ return t; }
+
+boardlist=
+		h:board wsNlStream t:boardlist_tail*
+		{ return [h].concat(t.reduce(function(i, t){ return (t.push(i), t); }, [])); }
+
+board = 
+		"[" h:cardlist "]"
+		{ return h; }
+
+action_atom=
+		"folds"
+		{ return { tag:"fold"}; }
+	/	"checks"
+		{ return { tag:"check"}; }
+	/	"bets " c:value isAllin:" and is all-in"?
+		{ return { tag:"bet", value:c, isAllin:(isAllin != false)}; }
+	/	"calls " v:value isAllin:" and is all-in"?
+		{ return { tag:"call", value:v, isAllin:(isAllin != false)}; }
+	/	"raises " v:value " to " v2:value isAllin:" and is all-in"?
+		{ return { tag:"raise", raised:v, to:v2, isAllin:(isAllin != false)}; }
+
+
+action=
+		name:username ":" wsNlStream a:action_atom wsNlStream
+		{ return { tag:"action", user:name, action:a}; }
+	/  "Uncalled bet (" v:value ") returned to " name:username wsNlStream
+		{ return { tag: "uncalled", value:v, to:name}; }
+	/	name:username ": doesn't show hand" wsNlStream
+		{ return { tag:"mucks", user:name }; }
+	/	name:username ": sits out" wsNlStream
+		{ return { tag:"sitsout", user:name }; }
+	/ 	name:username v:value wsNlStream "from pot" wsNlStream
+		{
+			// 
+			var li = name.lastIndexOf("collected");
+			if(li > -1 && li === name.length - 9 /*length of "collected"*/ ){
+				return { tag:"collects", user:name.substring(0, li - 1).trimRight(), value:v };
+			}
+			
+			throw new Error("Invalid action! Matched '" + name + "' (name:username v:value wsNlStream \"from pot\" wsNlStream)");
+		}
+	/	name:username wsNlStream
+		{
+			// This one is really wtf... the username can contain spaces, so
+			// the string <username> leaves the table should be matched as a username, and then treated ... arg!!!
+			var li = name.lastIndexOf("leaves the table");			
+			if(li > -1 && li === name.length - 16 /*length of "leaves the table"*/ ){
+				return { tag:"leaves", user: name.substring(0, li - 1).trimRight() };
+			}
+			
+			throw new Error("Invalid action! Matched '" + name + "' in (name:username wsNlStream)");
+		}
+
+
+list_actions=
+		end
+	/	action list_actions?
+end=
+
+
+streetName= "HOLE CARDS" / "FLOP" / "TURN" / "RIVER" / "SHOWDOWN"
+
+street=
+		"*** " name:streetName " ***" wsNlStream board:boardlist? actions:action*
+		{ return { tag:"street", name:name, board:board, actions:actions }; }
+
+
+summary_board=
+		"Board " board:board wsNlStream
+		{ return board; }
+
+// Most will be ignored, for now at least
+summary=
+		"*** SUMMARY ***" wsNlStream
+		"Total pot " pot:value " | Rake " rake:value wsNlStream
+		b:summary_board?
+		("Seat " number ":" (!nl .)* wsNlStream)+
+		{
+			return {
+				tag	: "summary",
+				pot	: pot,
+				rake	: rake,
+				board	: (b === "" ? null : b )
+			};
+		}
+
+preflopAction =
+		postSBlind
+	/	postBBlind
+	/	action
+
+preflop=preflopAction*
+	
+hand=
+		hand:handPresentation table:tablePresentation seats:seatPresentation+ prfl:preflop sts:street* summ:summary
+		{
+			return {
+				tag		: "hand",
+				info		: hand,
+				table		: table,
+				seats		: seats,
+				streets	: (sts.push(prfl), sts),
+				summary	: summ
+			};
+		}
+	
+
+game="Hold'em No Limit"
+
+stakes=
+		s:value "/" b:value " USD"
+		{ return { small:s, big:b}; }
+
+username=
+		cs:usernamechar+
+		{ return cs.join('').trimRight(); }
+
+usernamechar=[a-zA-Z0-9!_ ]
+
+digits=[0-9]
+number=
+		d:digits+
+		{ return new Number(d.join('')); }
+
+value=
+		"$" d:digits+ "." d2:digits+
+		{ return new Number(d.join('') + '.' + d2.join('')); }
+	/	"$" n:number
+		{ return n; }
+
+wsNlStream	= wsNl*
+wsNl			= ws / nl
+ws				= [ /w/s/t]
+nl				= "\n" / "\r" / "\r\n"
+
