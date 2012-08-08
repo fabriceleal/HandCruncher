@@ -79,6 +79,8 @@ action=
 		{ return { tag: "uncalled", value:v, to:name}; }
 	/	name:username ": doesn't show hand" wsNlStream
 		{ return { tag:"mucks", user:name }; }
+	/	name:username ": shows " hole:board " " rest:(!nl .)* wsNlStream
+		{ return { tag:"shows", user:name, cards:hole, rest:rest.map(function(e){ return e[1];}).join('')}; }
 	/	name:username ": sits out" wsNlStream
 		{ return { tag:"sitsout", user:name }; }
 	/ 	name:username v:value wsNlStream "from pot" wsNlStream
@@ -110,7 +112,7 @@ list_actions=
 end=
 
 
-streetName= "HOLE CARDS" / "FLOP" / "TURN" / "RIVER" / "SHOWDOWN"
+streetName= "HOLE CARDS" / "FLOP" / "TURN" / "RIVER" / "SHOW DOWN"
 
 street=
 		"*** " name:streetName " ***" wsNlStream board:boardlist? actions:action*
@@ -167,7 +169,7 @@ username=
 		cs:usernamechar+
 		{ return cs.join('').trimRight(); }
 
-usernamechar=[a-zA-Z0-9!_ ]
+usernamechar=[a-zA-Z0-9!_\. ]
 
 digits=[0-9]
 number=

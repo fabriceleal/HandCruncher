@@ -1464,8 +1464,8 @@ exports.parser = (function(){
           return cachedResult.result;
         }
         
-        var result0, result1, result2, result3, result4;
-        var pos0, pos1;
+        var result0, result1, result2, result3, result4, result5, result6;
+        var pos0, pos1, pos2, pos3;
         
         pos0 = clone(pos);
         pos1 = clone(pos);
@@ -1611,59 +1611,98 @@ exports.parser = (function(){
               pos1 = clone(pos);
               result0 = parse_username();
               if (result0 !== null) {
-                if (input.substr(pos.offset, 10) === ": sits out") {
-                  result1 = ": sits out";
-                  advance(pos, 10);
+                if (input.substr(pos.offset, 8) === ": shows ") {
+                  result1 = ": shows ";
+                  advance(pos, 8);
                 } else {
                   result1 = null;
                   if (reportFailures === 0) {
-                    matchFailed("\": sits out\"");
+                    matchFailed("\": shows \"");
                   }
                 }
                 if (result1 !== null) {
-                  result2 = parse_wsNlStream();
+                  result2 = parse_board();
                   if (result2 !== null) {
-                    result0 = [result0, result1, result2];
-                  } else {
-                    result0 = null;
-                    pos = clone(pos1);
-                  }
-                } else {
-                  result0 = null;
-                  pos = clone(pos1);
-                }
-              } else {
-                result0 = null;
-                pos = clone(pos1);
-              }
-              if (result0 !== null) {
-                result0 = (function(offset, line, column, name) { return { tag:"sitsout", user:name }; })(pos0.offset, pos0.line, pos0.column, result0[0]);
-              }
-              if (result0 === null) {
-                pos = clone(pos0);
-              }
-              if (result0 === null) {
-                pos0 = clone(pos);
-                pos1 = clone(pos);
-                result0 = parse_username();
-                if (result0 !== null) {
-                  result1 = parse_value();
-                  if (result1 !== null) {
-                    result2 = parse_wsNlStream();
-                    if (result2 !== null) {
-                      if (input.substr(pos.offset, 8) === "from pot") {
-                        result3 = "from pot";
-                        advance(pos, 8);
+                    if (input.charCodeAt(pos.offset) === 32) {
+                      result3 = " ";
+                      advance(pos, 1);
+                    } else {
+                      result3 = null;
+                      if (reportFailures === 0) {
+                        matchFailed("\" \"");
+                      }
+                    }
+                    if (result3 !== null) {
+                      result4 = [];
+                      pos2 = clone(pos);
+                      pos3 = clone(pos);
+                      reportFailures++;
+                      result5 = parse_nl();
+                      reportFailures--;
+                      if (result5 === null) {
+                        result5 = "";
                       } else {
-                        result3 = null;
-                        if (reportFailures === 0) {
-                          matchFailed("\"from pot\"");
+                        result5 = null;
+                        pos = clone(pos3);
+                      }
+                      if (result5 !== null) {
+                        if (input.length > pos.offset) {
+                          result6 = input.charAt(pos.offset);
+                          advance(pos, 1);
+                        } else {
+                          result6 = null;
+                          if (reportFailures === 0) {
+                            matchFailed("any character");
+                          }
+                        }
+                        if (result6 !== null) {
+                          result5 = [result5, result6];
+                        } else {
+                          result5 = null;
+                          pos = clone(pos2);
+                        }
+                      } else {
+                        result5 = null;
+                        pos = clone(pos2);
+                      }
+                      while (result5 !== null) {
+                        result4.push(result5);
+                        pos2 = clone(pos);
+                        pos3 = clone(pos);
+                        reportFailures++;
+                        result5 = parse_nl();
+                        reportFailures--;
+                        if (result5 === null) {
+                          result5 = "";
+                        } else {
+                          result5 = null;
+                          pos = clone(pos3);
+                        }
+                        if (result5 !== null) {
+                          if (input.length > pos.offset) {
+                            result6 = input.charAt(pos.offset);
+                            advance(pos, 1);
+                          } else {
+                            result6 = null;
+                            if (reportFailures === 0) {
+                              matchFailed("any character");
+                            }
+                          }
+                          if (result6 !== null) {
+                            result5 = [result5, result6];
+                          } else {
+                            result5 = null;
+                            pos = clone(pos2);
+                          }
+                        } else {
+                          result5 = null;
+                          pos = clone(pos2);
                         }
                       }
-                      if (result3 !== null) {
-                        result4 = parse_wsNlStream();
-                        if (result4 !== null) {
-                          result0 = [result0, result1, result2, result3, result4];
+                      if (result4 !== null) {
+                        result5 = parse_wsNlStream();
+                        if (result5 !== null) {
+                          result0 = [result0, result1, result2, result3, result4, result5];
                         } else {
                           result0 = null;
                           pos = clone(pos1);
@@ -1684,16 +1723,48 @@ exports.parser = (function(){
                   result0 = null;
                   pos = clone(pos1);
                 }
+              } else {
+                result0 = null;
+                pos = clone(pos1);
+              }
+              if (result0 !== null) {
+                result0 = (function(offset, line, column, name, hole, rest) { return { tag:"shows", user:name, cards:hole, rest:rest.map(function(e){ return e[1];}).join('')}; })(pos0.offset, pos0.line, pos0.column, result0[0], result0[2], result0[4]);
+              }
+              if (result0 === null) {
+                pos = clone(pos0);
+              }
+              if (result0 === null) {
+                pos0 = clone(pos);
+                pos1 = clone(pos);
+                result0 = parse_username();
                 if (result0 !== null) {
-                  result0 = (function(offset, line, column, name, v) {
-                			// 
-                			var li = name.lastIndexOf("collected");
-                			if(li > -1 && li === name.length - 9 /*length of "collected"*/ ){
-                				return { tag:"collects", user:name.substring(0, li - 1).trimRight(), value:v };
-                			}
-                			
-                			throw new Error("Invalid action! Matched '" + name + "' (name:username v:value wsNlStream \"from pot\" wsNlStream)");
-                		})(pos0.offset, pos0.line, pos0.column, result0[0], result0[1]);
+                  if (input.substr(pos.offset, 10) === ": sits out") {
+                    result1 = ": sits out";
+                    advance(pos, 10);
+                  } else {
+                    result1 = null;
+                    if (reportFailures === 0) {
+                      matchFailed("\": sits out\"");
+                    }
+                  }
+                  if (result1 !== null) {
+                    result2 = parse_wsNlStream();
+                    if (result2 !== null) {
+                      result0 = [result0, result1, result2];
+                    } else {
+                      result0 = null;
+                      pos = clone(pos1);
+                    }
+                  } else {
+                    result0 = null;
+                    pos = clone(pos1);
+                  }
+                } else {
+                  result0 = null;
+                  pos = clone(pos1);
+                }
+                if (result0 !== null) {
+                  result0 = (function(offset, line, column, name) { return { tag:"sitsout", user:name }; })(pos0.offset, pos0.line, pos0.column, result0[0]);
                 }
                 if (result0 === null) {
                   pos = clone(pos0);
@@ -1703,9 +1774,35 @@ exports.parser = (function(){
                   pos1 = clone(pos);
                   result0 = parse_username();
                   if (result0 !== null) {
-                    result1 = parse_wsNlStream();
+                    result1 = parse_value();
                     if (result1 !== null) {
-                      result0 = [result0, result1];
+                      result2 = parse_wsNlStream();
+                      if (result2 !== null) {
+                        if (input.substr(pos.offset, 8) === "from pot") {
+                          result3 = "from pot";
+                          advance(pos, 8);
+                        } else {
+                          result3 = null;
+                          if (reportFailures === 0) {
+                            matchFailed("\"from pot\"");
+                          }
+                        }
+                        if (result3 !== null) {
+                          result4 = parse_wsNlStream();
+                          if (result4 !== null) {
+                            result0 = [result0, result1, result2, result3, result4];
+                          } else {
+                            result0 = null;
+                            pos = clone(pos1);
+                          }
+                        } else {
+                          result0 = null;
+                          pos = clone(pos1);
+                        }
+                      } else {
+                        result0 = null;
+                        pos = clone(pos1);
+                      }
                     } else {
                       result0 = null;
                       pos = clone(pos1);
@@ -1715,19 +1812,50 @@ exports.parser = (function(){
                     pos = clone(pos1);
                   }
                   if (result0 !== null) {
-                    result0 = (function(offset, line, column, name) {
-                  			// This one is really wtf... the username can contain spaces, so
-                  			// the string <username> leaves the table should be matched as a username, and then treated ... arg!!!
-                  			var li = name.lastIndexOf("leaves the table");			
-                  			if(li > -1 && li === name.length - 16 /*length of "leaves the table"*/ ){
-                  				return { tag:"leaves", user: name.substring(0, li - 1).trimRight() };
+                    result0 = (function(offset, line, column, name, v) {
+                  			// 
+                  			var li = name.lastIndexOf("collected");
+                  			if(li > -1 && li === name.length - 9 /*length of "collected"*/ ){
+                  				return { tag:"collects", user:name.substring(0, li - 1).trimRight(), value:v };
                   			}
                   			
-                  			throw new Error("Invalid action! Matched '" + name + "' in (name:username wsNlStream)");
-                  		})(pos0.offset, pos0.line, pos0.column, result0[0]);
+                  			throw new Error("Invalid action! Matched '" + name + "' (name:username v:value wsNlStream \"from pot\" wsNlStream)");
+                  		})(pos0.offset, pos0.line, pos0.column, result0[0], result0[1]);
                   }
                   if (result0 === null) {
                     pos = clone(pos0);
+                  }
+                  if (result0 === null) {
+                    pos0 = clone(pos);
+                    pos1 = clone(pos);
+                    result0 = parse_username();
+                    if (result0 !== null) {
+                      result1 = parse_wsNlStream();
+                      if (result1 !== null) {
+                        result0 = [result0, result1];
+                      } else {
+                        result0 = null;
+                        pos = clone(pos1);
+                      }
+                    } else {
+                      result0 = null;
+                      pos = clone(pos1);
+                    }
+                    if (result0 !== null) {
+                      result0 = (function(offset, line, column, name) {
+                    			// This one is really wtf... the username can contain spaces, so
+                    			// the string <username> leaves the table should be matched as a username, and then treated ... arg!!!
+                    			var li = name.lastIndexOf("leaves the table");			
+                    			if(li > -1 && li === name.length - 16 /*length of "leaves the table"*/ ){
+                    				return { tag:"leaves", user: name.substring(0, li - 1).trimRight() };
+                    			}
+                    			
+                    			throw new Error("Invalid action! Matched '" + name + "' in (name:username wsNlStream)");
+                    		})(pos0.offset, pos0.line, pos0.column, result0[0]);
+                    }
+                    if (result0 === null) {
+                      pos = clone(pos0);
+                    }
                   }
                 }
               }
@@ -1847,6 +1975,17 @@ exports.parser = (function(){
                 result0 = null;
                 if (reportFailures === 0) {
                   matchFailed("\"RIVER\"");
+                }
+              }
+              if (result0 === null) {
+                if (input.substr(pos.offset, 9) === "SHOW DOWN") {
+                  result0 = "SHOW DOWN";
+                  advance(pos, 9);
+                } else {
+                  result0 = null;
+                  if (reportFailures === 0) {
+                    matchFailed("\"SHOW DOWN\"");
+                  }
                 }
               }
             }
@@ -2624,13 +2763,13 @@ exports.parser = (function(){
         
         var result0;
         
-        if (/^[a-zA-Z0-9!_ ]/.test(input.charAt(pos.offset))) {
+        if (/^[a-zA-Z0-9!_. ]/.test(input.charAt(pos.offset))) {
           result0 = input.charAt(pos.offset);
           advance(pos, 1);
         } else {
           result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[a-zA-Z0-9!_ ]");
+            matchFailed("[a-zA-Z0-9!_. ]");
           }
         }
         
