@@ -36,6 +36,10 @@ postBBlind=
 		u:username ": posts big blind " v:value wsNlStream
 		{ return { tag:"postBBlind", value:v, user:u }; }
 
+postSBBB=
+		u:username ": posts small & big blinds " v:value wsNlStream
+		{ return { tag:"postSBBB", value:v, user:u }; }
+
 postAnte=
 		u:username ": posts the ante " v:value wsNlStream
 		{ return { tag:"ante", value:v, user:u }; }
@@ -61,19 +65,22 @@ boardlist=
 		{ return [h].concat(t.reduce(function(i, t){ return (t.push(i), t); }, [])); }
 
 board = 
-		"[" h:cardlist "]"
+		"[" h:card "]"
+		{ return h; }
+	/	"[" h:cardlist "]"
 		{ return h; }
 
+
 action_atom=
-		"folds"
-		{ return { tag:"fold"}; }
+		"folds" showed:(wsNlStream board)?
+		{ return { tag:"fold", showed:(showed ? showed[1] : null)}; }
 	/	"checks"
 		{ return { tag:"check"}; }
-	/	"bets " c:value isAllin:" and is all-in"?
+	/	"bets" wsNlStream c:value isAllin:" and is all-in"?
 		{ return { tag:"bet", value:c, isAllin:(isAllin != false)}; }
-	/	"calls " v:value isAllin:" and is all-in"?
+	/	"calls" wsNlStream v:value isAllin:" and is all-in"?
 		{ return { tag:"call", value:v, isAllin:(isAllin != false)}; }
-	/	"raises " v:value " to " v2:value isAllin:" and is all-in"?
+	/	"raises" wsNlStream v:value " to " v2:value isAllin:" and is all-in"?
 		{ return { tag:"raise", raised:v, to:v2, isAllin:(isAllin != false)}; }
 
 
@@ -88,11 +95,13 @@ action=
 		{ return { tag:"mucks", user:name }; }
 	/	name:username ": shows " hole:board " " rest:(!nl .)* wsNlStream
 		{ return { tag:"shows", user:name, cards:hole, rest:rest.map(function(e){ return e[1];}).join('')}; }
+	/	name:username ": shows " hole:board wsNlStream
+		{ return { tag:"shows", user:name, cards:hole}; }
 	/	name:username ": sits out" wsNlStream
 		{ return { tag:"sits_out", user:name }; }
 	/	name:username ": is sitting out" wsNlStream
 		{ return { tag:"sitting_out", user:name }; }
-	/  name:username "#" seat:number wsNlStream
+	/*/  name:username "#" seat:number wsNlStream
 		{
 			// (1)
 			var li = name.lastIndexOf("joins the table at seat");
@@ -100,8 +109,8 @@ action=
 				return { tag:"joins", user:name.substring(0, li - 1).trimRight(), seat:seat };
 			} 
 
-			throw new Error("Invalid action! Matched '" + name + "' in (name:username \"#\" v:value wsNlStream)");
-		}
+			throw new Error("Invalid action! Matched '" + name + "' in (name:username \"#\" v:value wsNlStream) (" + line + ", " + column + ")");
+		}*/
 	/	name:username ", " said:stringLiteral wsNlStream
 		{
 			// (1)
@@ -110,28 +119,69 @@ action=
 				return { tag:"said", user:name.substring(0, li - 1).trimRight(), said:said };
 			}
 			
-			throw new Error("Invalid action! Matched '" + name + "' in (name:username \", \" said:stringLiteral wsNlStream)");
-		}
-	/ 	name:username v:value " from pot" wsNlStream
-		{
-			// (1)
-			var li = name.lastIndexOf("collected");
-			if(li > -1 && li === name.length - 9 /*length of "collected"*/ ){
-				return { tag:"collects", user:name.substring(0, li - 1).trimRight(), value:v };
-			}
-			
-			throw new Error("Invalid action! Matched '" + name + "' (name:username v:value wsNlStream \"from pot\" wsNlStream)");
+			throw new Error("Invalid action! Matched '" + name + "' in (name:username \", \" said:stringLiteral wsNlStream) (" + line + ", " + column + ")");
 		}
 	/	name:username wsNlStream
 		{
 			// (1)
 			var tests = [
 				{ str:"has timed out while disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
+				{ str:"has timed out while being disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
 				{ str:"leaves the table", toRet:function( u ){ return { tag:"leaves", user:u }}},
 				{ str:"will be allowed to play after the button", toRet:function( u ){ return { tag:"allowedAfterButton", user:u }}},
 				{ str:"was removed from the table for failing to post", toRet:function( u ){ return { tag:"removedAfterPostFail", user:u }}},
 				{ str:"is disconnected", toRet:function(u){ return { tag:"disconnected", user:u }}},
-				{ str:"has timed out", toRet:function(u){ return { tag:"disconnected", user:u }}}
+				{ str:"has timed out", toRet:function(u){ return { tag:"timedOut", user:u }}},
+				{ str:"is connected", toRet:function(u){ return { tag:"connected", user:u }}}
+			];
+
+			var testsRegex = [
+				{ pattern:"collected [$€]([0-9]+(?:\.[0-9]+)?) from pot", toRet:function(result){
+						if(result){
+							return {
+								tag	: "collectsPot",
+								user	: name.substring(0, result.index - 1).trimRight(),
+								value	: new Number(result[1])
+							};
+						}
+						return null;
+					}
+				},
+				{ pattern:"collected [$€]([0-9]+(?:\.[0-9]+)?) from side pot", toRet:function(result){
+						if(result){
+							return {
+								tag	: "collectsSidePot",
+								user	: name.substring(0, result.index - 1).trimRight(),
+								value	: new Number(result[1])
+							};
+						}
+						return null;
+					}
+				},
+				{ pattern:"collected [$€]([0-9]+(?:\.[0-9]+)?) from main pot", toRet:function(result){
+						if(result){
+							return {
+								tag	: "collectsMainPot",
+								user	: name.substring(0, result.index - 1).trimRight(),
+								value	: new Number(result[1])
+							};
+						}
+						return null;
+					}
+				},
+				{
+					pattern:"joins the table at seat #([0-9]+)",
+					toRet:function(result){
+								if(result){
+									return {
+										tag	: "joins",
+										user	: name.substring(0, result.index - 1).trimRight(),
+										seat	: new Number(result[1])
+									};
+								}
+								return null;
+							}
+				}
 			];
 
 			var li = -1;
@@ -143,8 +193,16 @@ action=
 					}
 				}
 			}
+
+			for(var k in testsRegex){
+				with(testsRegex[k]){
+					var r = toRet(name.match(pattern));
+					if(r !== null)
+						return r;
+				}
+			}
 			
-			throw new Error("Invalid action! Matched '" + name + "' in (name:username wsNlStream)");
+			throw new Error("Invalid action! Matched '" + name + "' in (name:username wsNlStream) at (" + line + ", " + column + ")");
 		}
 
 /* 
@@ -152,10 +210,14 @@ action=
 	string <username> leaves the table should be matched as a username, and then treated ... arg!!!
 */
 
+streetHeader=
+		"*** " name:streetName " ***"
+		{ return name; }
+
 streetName= "HOLE CARDS" / "FLOP" / "TURN" / "RIVER" / "SHOW DOWN"
 
 street=
-		"*** " name:streetName " ***" wsNlStream board:boardlist? actions:action*
+		name:streetHeader wsNlStream board:boardlist? actions:action*
 		{ return { tag:"street", name:name, board:board, actions:actions }; }
 
 
@@ -163,23 +225,56 @@ summary_board=
 		"Board " board:board wsNlStream
 		{ return board; }
 
+//	Total pot $27.33 Main pot $11.78. Side pot $14.32. | Rake $1.23 
+// "Total pot " pot:value ("Main pot ")? " | Rake " rake:value wsNlStream
+mainPot=
+		" Main pot " main:value "."
+		{ return main; }
+
+sidePot=
+		" Side pot " side:value "."
+		{ return side; }
+
+potInfoLeft=
+		"Total pot " pot:value main:mainPot? side:sidePot?
+		{
+			return {
+				pot:	pot,
+				main:	main,
+				side: side
+			};
+		}
+
+potInfo=
+		left:potInfoLeft " | Rake " rake:value wsNlStream
+		{
+			return {
+				pot: 	left.pot,
+				main:	left.main,
+				side:	left.side,
+				rake:	rake
+			};
+		}
+
+		
+summaryHeader = "*** SUMMARY ***"	
 // Most will be ignored, for now at least
 summary=
-		"*** SUMMARY ***" wsNlStream
-		"Total pot " pot:value " | Rake " rake:value wsNlStream
+		summaryHeader wsNlStream
+		pot:potInfo
 		b:summary_board?
 		("Seat " number ":" (!nl .)* wsNlStream)+
 		{
 			return {
 				tag	: "summary",
-				pot	: pot,
-				rake	: rake,
+				potInfo: pot,
 				board	: (b === "" ? null : b )
 			};
 		}
 
 preflopAction =
-		postSBlind
+		postSBBB
+	/ 	postSBlind
 	/	postBBlind
 	/	postAnte
 	/	action
@@ -202,8 +297,14 @@ hand=
 
 game="Hold'em No Limit"
 
-stringLiteral='"' c:(!'"' .)* '"'
-		{ return c.map(function(e){ return e[1];}).join(''); }
+// Match everything until the end of the line. 
+//	Then trim and take off the last ("). 
+// (") inside the string are not escaped!!!
+stringLiteral='"' c:(!nl .)*
+		{ 
+			var s = c.map(function(e){ return e[1];}).join('').trimRight(); 
+			return s.substr(0, s.lastIndexOf('"')); 
+		}
 
 currency="USD" / "EUR"
 currencySymbol= "$" / "€" // "\u20AC"
@@ -212,12 +313,17 @@ stakes=
 		s:value "/" b:value " " c:currency
 		{ return { small:s, big:b, currency:c}; }
 
-username=
+CCusername=
 		cs:usernamechar+
 		{ return cs.join('').trimRight(); }
 
-// FIXME Putting currencies here breaks the <user> collected $/€<nbr> from pot. Why? - Because it matches also the value !!!
-usernamechar=[a-zA-Z0-9!_\.€$ ]
+
+username=
+		!(streetHeader / summaryHeader) user:CCusername
+		{ return user; }
+
+// The amount of allowed chars is too damn high!
+usernamechar=[a-zA-Z0-9!_€$@#\.\-\=\*\+\">< ]
 
 digits=[0-9]
 number=
