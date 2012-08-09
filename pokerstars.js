@@ -77,6 +77,8 @@ exports.parser = (function(){
         "CCusername": parse_CCusername,
         "username": parse_username,
         "usernamechar": parse_usernamechar,
+        "tablename": parse_tablename,
+        "tablenamechar": parse_tablenamechar,
         "digits": parse_digits,
         "number": parse_number,
         "value": parse_value,
@@ -563,7 +565,7 @@ exports.parser = (function(){
           }
         }
         if (result0 !== null) {
-          result1 = parse_username();
+          result1 = parse_tablename();
           if (result1 !== null) {
             if (input.substr(pos.offset, 2) === "' ") {
               result2 = "' ";
@@ -3159,13 +3161,74 @@ exports.parser = (function(){
       function parse_usernamechar() {
         var result0;
         
-        if (/^[a-zA-Z0-9!_\u20AC$@#.\-=*+">< ]/.test(input.charAt(pos.offset))) {
+        if (/^[a-zA-Z0-9!_\u20AC$@#.\-=*+>< ]/.test(input.charAt(pos.offset))) {
           result0 = input.charAt(pos.offset);
           advance(pos, 1);
         } else {
           result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[a-zA-Z0-9!_\\u20AC$@#.\\-=*+\">< ]");
+            matchFailed("[a-zA-Z0-9!_\\u20AC$@#.\\-=*+>< ]");
+          }
+        }
+        if (result0 === null) {
+          if (input.charCodeAt(pos.offset) === 34) {
+            result0 = "\"";
+            advance(pos, 1);
+          } else {
+            result0 = null;
+            if (reportFailures === 0) {
+              matchFailed("\"\\\"\"");
+            }
+          }
+          if (result0 === null) {
+            if (input.charCodeAt(pos.offset) === 39) {
+              result0 = "'";
+              advance(pos, 1);
+            } else {
+              result0 = null;
+              if (reportFailures === 0) {
+                matchFailed("\"'\"");
+              }
+            }
+          }
+        }
+        return result0;
+      }
+      
+      function parse_tablename() {
+        var result0, result1;
+        var pos0;
+        
+        pos0 = clone(pos);
+        result1 = parse_tablenamechar();
+        if (result1 !== null) {
+          result0 = [];
+          while (result1 !== null) {
+            result0.push(result1);
+            result1 = parse_tablenamechar();
+          }
+        } else {
+          result0 = null;
+        }
+        if (result0 !== null) {
+          result0 = (function(offset, line, column, cs) { return cs.join('').trimRight(); })(pos0.offset, pos0.line, pos0.column, result0);
+        }
+        if (result0 === null) {
+          pos = clone(pos0);
+        }
+        return result0;
+      }
+      
+      function parse_tablenamechar() {
+        var result0;
+        
+        if (/^[a-zA-Z0-9 ]/.test(input.charAt(pos.offset))) {
+          result0 = input.charAt(pos.offset);
+          advance(pos, 1);
+        } else {
+          result0 = null;
+          if (reportFailures === 0) {
+            matchFailed("[a-zA-Z0-9 ]");
           }
         }
         return result0;

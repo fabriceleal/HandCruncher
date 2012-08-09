@@ -21,7 +21,7 @@ tableType=
 	/	"2-max"
 
 tablePresentation=
-		"Table '" table:username "' " type:tableType " Seat #" buttonseat:number " is the button" wsNlStream
+		"Table '" table:tablename "' " type:tableType " Seat #" buttonseat:number " is the button" wsNlStream
 		{ return { table:table, buttonseat:buttonseat, type:type}; }
 
 seatPresentation=
@@ -323,7 +323,11 @@ username=
 		{ return user; }
 
 // The amount of allowed chars is too damn high!
-usernamechar=[a-zA-Z0-9!_€$@#\.\-\=\*\+\">< ]
+usernamechar=[a-zA-Z0-9!_€$@#\.\-\=\*\+>< ] / '"' / "'"
+
+tablename= cs:tablenamechar+
+		{ return cs.join('').trimRight(); }
+tablenamechar=[a-zA-Z0-9 ]
 
 digits=[0-9]
 number=
