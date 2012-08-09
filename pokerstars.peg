@@ -327,6 +327,7 @@ usernamechar=[a-zA-Z0-9!_€$@#\.\-\=\*\+>< ] / '"' / "'"
 
 tablename= cs:tablenamechar+
 		{ return cs.join('').trimRight(); }
+
 tablenamechar=[a-zA-Z0-9 ]
 
 digits=[0-9]
