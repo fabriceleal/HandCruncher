@@ -323,7 +323,7 @@ username=
 		{ return user; }
 
 // The amount of allowed chars is too damn high!
-usernamechar=[a-zA-Z0-9!_€$@#\.\-\=\*\+>< ] / '"' / "'"
+usernamechar=[a-zA-Z0-9!_€$@#\.\-\=\*\+><&äëïöüãẽĩõũ ] / '"' / "'"
 
 tablename= cs:tablenamechar+
 		{ return cs.join('').trimRight(); }

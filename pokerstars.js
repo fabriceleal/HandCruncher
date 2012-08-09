@@ -3161,13 +3161,13 @@ exports.parser = (function(){
       function parse_usernamechar() {
         var result0;
         
-        if (/^[a-zA-Z0-9!_\u20AC$@#.\-=*+>< ]/.test(input.charAt(pos.offset))) {
+        if (/^[a-zA-Z0-9!_\u20AC$@#.\-=*+><&\xE4\xEB\xEF\xF6\xFC\xE3\u1EBD\u0129\xF5\u0169 ]/.test(input.charAt(pos.offset))) {
           result0 = input.charAt(pos.offset);
           advance(pos, 1);
         } else {
           result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[a-zA-Z0-9!_\\u20AC$@#.\\-=*+>< ]");
+            matchFailed("[a-zA-Z0-9!_\\u20AC$@#.\\-=*+><&\\xE4\\xEB\\xEF\\xF6\\xFC\\xE3\\u1EBD\\u0129\\xF5\\u0169 ]");
           }
         }
         if (result0 === null) {
