@@ -101,16 +101,6 @@ action=
 		{ return { tag:"sits_out", user:name }; }
 	/	name:username ": is sitting out" wsNlStream
 		{ return { tag:"sitting_out", user:name }; }
-	/*/  name:username "#" seat:number wsNlStream
-		{
-			// (1)
-			var li = name.lastIndexOf("joins the table at seat");
-			if(li > -1 && li === name.length - 23){
-				return { tag:"joins", user:name.substring(0, li - 1).trimRight(), seat:seat };
-			} 
-
-			throw new Error("Invalid action! Matched '" + name + "' in (name:username \"#\" v:value wsNlStream) (" + line + ", " + column + ")");
-		}*/
 	/	name:username ", " said:stringLiteral wsNlStream
 		{
 			// (1)
@@ -343,6 +333,6 @@ value=
 
 wsNlStream	= wsNl*
 wsNl			= ws / nl
-ws				= [ /w/s/t]
+ws				= [ /w/t]
 nl				= "\n" / "\r" / "\r\n"
 

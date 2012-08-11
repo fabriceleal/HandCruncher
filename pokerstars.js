@@ -3389,13 +3389,13 @@ exports.parser = (function(){
       function parse_ws() {
         var result0;
         
-        if (/^[ \/w\/s\/t]/.test(input.charAt(pos.offset))) {
+        if (/^[ \/w\/t]/.test(input.charAt(pos.offset))) {
           result0 = input.charAt(pos.offset);
           advance(pos, 1);
         } else {
           result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[ \\/w\\/s\\/t]");
+            matchFailed("[ \\/w\\/t]");
           }
         }
         return result0;
