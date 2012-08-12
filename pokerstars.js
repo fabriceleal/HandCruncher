@@ -54,6 +54,7 @@ exports.parser = (function(){
         "boardlist_tail": parse_boardlist_tail,
         "boardlist": parse_boardlist,
         "board": parse_board,
+        "isCapped": parse_isCapped,
         "action_atom": parse_action_atom,
         "action": parse_action,
         "streetHeader": parse_streetHeader,
@@ -712,7 +713,7 @@ exports.parser = (function(){
         				}
         			}
         
-        			throw new Error("Invalid seat presentation! Matched '" + u + "' in (\"Seat \" seat:number \": \" u:username wsNlStream) (" + line + ", " + column + ")");
+        			throw new Error("Invalid seat presentation! Matched '" + u + "' in (\"Seat \" seat:" + JSON.stringify(seat) + " \": \" u:username wsNlStream) (" + line + ", " + column + ")");
         			//return { seat:seat, name:u, stack:stack};
         		})(pos0.offset, pos0.line, pos0.column, result0[1], result0[3]);
         }
@@ -1198,8 +1199,58 @@ exports.parser = (function(){
         return result0;
       }
       
+      function parse_isCapped() {
+        var result0, result1, result2;
+        var pos0, pos1;
+        
+        pos0 = clone(pos);
+        pos1 = clone(pos);
+        if (input.substr(pos.offset, 21) === " and has reached the ") {
+          result0 = " and has reached the ";
+          advance(pos, 21);
+        } else {
+          result0 = null;
+          if (reportFailures === 0) {
+            matchFailed("\" and has reached the \"");
+          }
+        }
+        if (result0 !== null) {
+          result1 = parse_value();
+          if (result1 !== null) {
+            if (input.substr(pos.offset, 4) === " cap") {
+              result2 = " cap";
+              advance(pos, 4);
+            } else {
+              result2 = null;
+              if (reportFailures === 0) {
+                matchFailed("\" cap\"");
+              }
+            }
+            if (result2 !== null) {
+              result0 = [result0, result1, result2];
+            } else {
+              result0 = null;
+              pos = clone(pos1);
+            }
+          } else {
+            result0 = null;
+            pos = clone(pos1);
+          }
+        } else {
+          result0 = null;
+          pos = clone(pos1);
+        }
+        if (result0 !== null) {
+          result0 = (function(offset, line, column, cap) { return { tag:"cap", value:cap}; })(pos0.offset, pos0.line, pos0.column, result0[1]);
+        }
+        if (result0 === null) {
+          pos = clone(pos0);
+        }
+        return result0;
+      }
+      
       function parse_action_atom() {
-        var result0, result1, result2, result3, result4, result5;
+        var result0, result1, result2, result3, result4, result5, result6;
         var pos0, pos1, pos2;
         
         pos0 = clone(pos);
@@ -1290,7 +1341,14 @@ exports.parser = (function(){
                   }
                   result3 = result3 !== null ? result3 : "";
                   if (result3 !== null) {
-                    result0 = [result0, result1, result2, result3];
+                    result4 = parse_isCapped();
+                    result4 = result4 !== null ? result4 : "";
+                    if (result4 !== null) {
+                      result0 = [result0, result1, result2, result3, result4];
+                    } else {
+                      result0 = null;
+                      pos = clone(pos1);
+                    }
                   } else {
                     result0 = null;
                     pos = clone(pos1);
@@ -1308,7 +1366,7 @@ exports.parser = (function(){
               pos = clone(pos1);
             }
             if (result0 !== null) {
-              result0 = (function(offset, line, column, c, isAllin) { return { tag:"bet", value:c, isAllin:(isAllin != false)}; })(pos0.offset, pos0.line, pos0.column, result0[2], result0[3]);
+              result0 = (function(offset, line, column, c, isAllin, isCapped) { return { tag:"bet", value:c, isAllin:(isAllin != false), isCapped:isCapped}; })(pos0.offset, pos0.line, pos0.column, result0[2], result0[3], result0[4]);
             }
             if (result0 === null) {
               pos = clone(pos0);
@@ -1404,7 +1462,14 @@ exports.parser = (function(){
                           }
                           result5 = result5 !== null ? result5 : "";
                           if (result5 !== null) {
-                            result0 = [result0, result1, result2, result3, result4, result5];
+                            result6 = parse_isCapped();
+                            result6 = result6 !== null ? result6 : "";
+                            if (result6 !== null) {
+                              result0 = [result0, result1, result2, result3, result4, result5, result6];
+                            } else {
+                              result0 = null;
+                              pos = clone(pos1);
+                            }
                           } else {
                             result0 = null;
                             pos = clone(pos1);
@@ -1430,7 +1495,7 @@ exports.parser = (function(){
                   pos = clone(pos1);
                 }
                 if (result0 !== null) {
-                  result0 = (function(offset, line, column, v, v2, isAllin) { return { tag:"raise", raised:v, to:v2, isAllin:(isAllin != false)}; })(pos0.offset, pos0.line, pos0.column, result0[2], result0[4], result0[5]);
+                  result0 = (function(offset, line, column, v, v2, isAllin, isCapped) { return { tag:"raise", raised:v, to:v2, isAllin:(isAllin != false), isCapped:isCapped}; })(pos0.offset, pos0.line, pos0.column, result0[2], result0[4], result0[5], result0[6]);
                 }
                 if (result0 === null) {
                   pos = clone(pos0);
@@ -3160,13 +3225,13 @@ exports.parser = (function(){
       function parse_usernamechar() {
         var result0;
         
-        if (/^[a-zA-Z0-9!_\u20AC$%@#.\-=*+|\/><&\xE4\xEB\xEF\xF6\xFC\xE3\u1EBD\u0129\xF5\u0169\xE0\xE8\xEC\xF2\xF9\xE1\xE9\xED\xF3\xFA\xE2\xEA\xEE\xF4\xFB\xC4\xCB\xCF\xD6\xDC\xC3\u1EBC\u0128\xD5\u0168\xC0\xC8\xCC\xD2\xD9\xC1\xC9\xCD\xD3\xDA\xC2\xCA\xCE\xD4\xDB\xE7\xC7\xE5\xE6\xA4?()^`\xB4 ]/.test(input.charAt(pos.offset))) {
+        if (/^[a-zA-Z0-9!_\u20AC$%@#.\-=*+|\/><&\xE4\xEB\xEF\xF6\xFC\xE3\u1EBD\u0129\xF5\u0169\xE0\xE8\xEC\xF2\xF9\xE1\xE9\xED\xF3\xFA\xE2\xEA\xEE\xF4\xFB\xC4\xCB\xCF\xD6\xDC\xC3\u1EBC\u0128\xD5\u0168\xC0\xC8\xCC\xD2\xD9\xC1\xC9\xCD\xD3\xDA\xC2\xCA\xCE\xD4\xDB\xE7\xC7\xE5\xE6\xC6\xF8\xA4?()^`\xB4[\] ]/.test(input.charAt(pos.offset))) {
           result0 = input.charAt(pos.offset);
           advance(pos, 1);
         } else {
           result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[a-zA-Z0-9!_\\u20AC$%@#.\\-=*+|\\/><&\\xE4\\xEB\\xEF\\xF6\\xFC\\xE3\\u1EBD\\u0129\\xF5\\u0169\\xE0\\xE8\\xEC\\xF2\\xF9\\xE1\\xE9\\xED\\xF3\\xFA\\xE2\\xEA\\xEE\\xF4\\xFB\\xC4\\xCB\\xCF\\xD6\\xDC\\xC3\\u1EBC\\u0128\\xD5\\u0168\\xC0\\xC8\\xCC\\xD2\\xD9\\xC1\\xC9\\xCD\\xD3\\xDA\\xC2\\xCA\\xCE\\xD4\\xDB\\xE7\\xC7\\xE5\\xE6\\xA4?()^`\\xB4 ]");
+            matchFailed("[a-zA-Z0-9!_\\u20AC$%@#.\\-=*+|\\/><&\\xE4\\xEB\\xEF\\xF6\\xFC\\xE3\\u1EBD\\u0129\\xF5\\u0169\\xE0\\xE8\\xEC\\xF2\\xF9\\xE1\\xE9\\xED\\xF3\\xFA\\xE2\\xEA\\xEE\\xF4\\xFB\\xC4\\xCB\\xCF\\xD6\\xDC\\xC3\\u1EBC\\u0128\\xD5\\u0168\\xC0\\xC8\\xCC\\xD2\\xD9\\xC1\\xC9\\xCD\\xD3\\xDA\\xC2\\xCA\\xCE\\xD4\\xDB\\xE7\\xC7\\xE5\\xE6\\xC6\\xF8\\xA4?()^`\\xB4[\\] ]");
           }
         }
         if (result0 === null) {

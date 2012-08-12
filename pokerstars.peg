@@ -128,7 +128,7 @@ seatPresentation=
 				}
 			}
 
-			throw new Error("Invalid seat presentation! Matched '" + u + "' in (\"Seat \" seat:number \": \" u:username wsNlStream) (" + line + ", " + column + ")");
+			throw new Error("Invalid seat presentation! Matched '" + u + "' in (\"Seat \" seat:" + JSON.stringify(seat) + " \": \" u:username wsNlStream) (" + line + ", " + column + ")");
 			//return { seat:seat, name:u, stack:stack};
 		}
 
@@ -174,18 +174,21 @@ board =
 	/	"[" h:cardlist "]"
 		{ return h; }
 
+isCapped=
+		" and has reached the " cap:value " cap"
+		{ return { tag:"cap", value:cap}; }
 
 action_atom=
 		"folds" showed:(wsNlStream board)?
 		{ return { tag:"fold", showed:(showed ? showed[1] : null)}; }
 	/	"checks"
 		{ return { tag:"check"}; }
-	/	"bets" wsNlStream c:value isAllin:" and is all-in"?
-		{ return { tag:"bet", value:c, isAllin:(isAllin != false)}; }
+	/	"bets" wsNlStream c:value isAllin:" and is all-in"? isCapped:isCapped?
+		{ return { tag:"bet", value:c, isAllin:(isAllin != false), isCapped:isCapped}; }
 	/	"calls" wsNlStream v:value isAllin:" and is all-in"?
 		{ return { tag:"call", value:v, isAllin:(isAllin != false)}; }
-	/	"raises" wsNlStream v:value " to " v2:value isAllin:" and is all-in"?
-		{ return { tag:"raise", raised:v, to:v2, isAllin:(isAllin != false)}; }
+	/	"raises" wsNlStream v:value " to " v2:value isAllin:" and is all-in"? isCapped:isCapped?
+		{ return { tag:"raise", raised:v, to:v2, isAllin:(isAllin != false), isCapped:isCapped}; }
 
 
 action=
@@ -361,7 +364,7 @@ username=
 
 // The amount of allowed chars is too damn high!
 // FIXME ':' and ',' are allowed!
-usernamechar=[a-zA-Z0-9!_€$%@#\.\-\=\*\+\|\/><&äëïöüãẽĩõũàèìòùáéíóúâêîôûÄËÏÖÜÃẼĨÕŨÀÈÌÒÙÁÉÍÓÚÂÊÎÔÛçÇåæ¤\?\(\)\^`´ ] / '"' / "'"
+usernamechar=[a-zA-Z0-9!_€$%@#\.\-\=\*\+\|\/><&äëïöüãẽĩõũàèìòùáéíóúâêîôûÄËÏÖÜÃẼĨÕŨÀÈÌÒÙÁÉÍÓÚÂÊÎÔÛçÇåæÆø¤\?\(\)\^`´\[\] ] / '"' / "'"
 
 tablename= cs:tablenamechar+
 		{ return cs.join('').trimRight(); }
