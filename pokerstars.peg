@@ -1,11 +1,103 @@
+{
+	//this.parsed = {};
+	//this.parsed.__proto__ = new (require('events').EventEmitter)();
+
+	//var parsed = this.parsed;
+
+	var seatPresentationRegexes = [
+			{ 
+				pattern	: new RegExp("\\([$€]([0-9]+(?:\\.[0-9]+)?) in chips\\)"), 
+				toRet		: function(result, seat, user){
+
+					if(result){
+						return {
+							seat  : seat,
+							user	: user.substring(0, result.index - 1).trimRight(),
+							stack	: new Number(result[1])
+						};
+					}
+					return null;
+				}
+			}
+		]; // seatPresentationRegexes
+
+	var usernameRegexes = [
+			{ 
+				pattern:new RegExp("collected [$€]([0-9]+(?:\\.[0-9]+)?) from pot"), 
+				toRet:function(result, name){
+					if(result){
+						return {
+							tag	: "collectsPot",
+							user	: name.substring(0, result.index - 1).trimRight(),
+							value	: new Number(result[1])
+						};
+					}
+					return null;
+				}
+			},
+			{ 
+				pattern:new RegExp("collected [$€]([0-9]+(?:\\.[0-9]+)?) from side pot"), 
+				toRet:function(result, name){
+					if(result){
+						return {
+							tag	: "collectsSidePot",
+							user	: name.substring(0, result.index - 1).trimRight(),
+							value	: new Number(result[1])
+						};
+					}
+					return null;
+				}
+			},
+			{ 
+				pattern:new RegExp("collected [$€]([0-9]+(?:\\.[0-9]+)?) from main pot"), 
+				toRet:function(result, name){
+					if(result){
+						return {
+							tag	: "collectsMainPot",
+							user	: name.substring(0, result.index - 1).trimRight(),
+							value	: new Number(result[1])
+						};
+					}
+					return null;
+				}
+			},
+			{
+				pattern:new RegExp("joins the table at seat #([0-9]+)"),
+				toRet:function(result, name){
+							if(result){
+								return {
+									tag	: "joins",
+									user	: name.substring(0, result.index - 1).trimRight(),
+									seat	: new Number(result[1])
+								};
+							}
+							return null;
+						}
+			}
+		];
+	
+	var usernameTests = [
+			{ str:"has timed out while disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
+			{ str:"has timed out while being disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
+			{ str:"leaves the table", toRet:function( u ){ return { tag:"leaves", user:u }}},
+			{ str:"will be allowed to play after the button", toRet:function( u ){ return { tag:"allowedAfterButton", user:u }}},
+			{ str:"was removed from the table for failing to post", toRet:function( u ){ return { tag:"removedAfterPostFail", user:u }}},
+			{ str:"is disconnected", toRet:function(u){ return { tag:"disconnected", user:u }}},
+			{ str:"has timed out", toRet:function(u){ return { tag:"timedOut", user:u }}},
+			{ str:"is connected", toRet:function(u){ return { tag:"connected", user:u }}}
+		];
+}
+
 program=
 		wsNlStream hands:handRaw+
 		{ return hands; }
 
 handRaw=
 		h:hand wsNlStream
-		{ return h;}
-
+		{ 
+			//parsed.emit('hand', h); 
+			return h;
+		}
 
 date=
 		year:number "/" month:number "/" day:number " " hour:number ":" minute:number ":" second:number " ET"
@@ -25,8 +117,20 @@ tablePresentation=
 		{ return { table:table, buttonseat:buttonseat, type:type}; }
 
 seatPresentation=
-		"Seat " seat:number ": " u:username "(" stack:value " in chips)" wsNlStream
-		{ return { seat:seat, name:u, stack:stack}; }
+		"Seat " seat:number ": " u:username wsNlStream // "(" stack:value " in chips)" wsNlStream
+		{ 
+
+			for(var k in seatPresentationRegexes){
+				with(seatPresentationRegexes[k]){
+					var r = toRet(u.match(pattern), seat, u);
+					if(r !== null)
+						return r;
+				}
+			}
+
+			throw new Error("Invalid seat presentation! Matched '" + u + "' in (\"Seat \" seat:number \": \" u:username wsNlStream) (" + line + ", " + column + ")");
+			//return { seat:seat, name:u, stack:stack};
+		}
 
 postSBlind=
 		u:username ": posts small blind " v:value wsNlStream
@@ -114,69 +218,10 @@ action=
 	/	name:username wsNlStream
 		{
 			// (1)
-			var tests = [
-				{ str:"has timed out while disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
-				{ str:"has timed out while being disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
-				{ str:"leaves the table", toRet:function( u ){ return { tag:"leaves", user:u }}},
-				{ str:"will be allowed to play after the button", toRet:function( u ){ return { tag:"allowedAfterButton", user:u }}},
-				{ str:"was removed from the table for failing to post", toRet:function( u ){ return { tag:"removedAfterPostFail", user:u }}},
-				{ str:"is disconnected", toRet:function(u){ return { tag:"disconnected", user:u }}},
-				{ str:"has timed out", toRet:function(u){ return { tag:"timedOut", user:u }}},
-				{ str:"is connected", toRet:function(u){ return { tag:"connected", user:u }}}
-			];
-
-			var testsRegex = [
-				{ pattern:"collected [$€]([0-9]+(?:\.[0-9]+)?) from pot", toRet:function(result){
-						if(result){
-							return {
-								tag	: "collectsPot",
-								user	: name.substring(0, result.index - 1).trimRight(),
-								value	: new Number(result[1])
-							};
-						}
-						return null;
-					}
-				},
-				{ pattern:"collected [$€]([0-9]+(?:\.[0-9]+)?) from side pot", toRet:function(result){
-						if(result){
-							return {
-								tag	: "collectsSidePot",
-								user	: name.substring(0, result.index - 1).trimRight(),
-								value	: new Number(result[1])
-							};
-						}
-						return null;
-					}
-				},
-				{ pattern:"collected [$€]([0-9]+(?:\.[0-9]+)?) from main pot", toRet:function(result){
-						if(result){
-							return {
-								tag	: "collectsMainPot",
-								user	: name.substring(0, result.index - 1).trimRight(),
-								value	: new Number(result[1])
-							};
-						}
-						return null;
-					}
-				},
-				{
-					pattern:"joins the table at seat #([0-9]+)",
-					toRet:function(result){
-								if(result){
-									return {
-										tag	: "joins",
-										user	: name.substring(0, result.index - 1).trimRight(),
-										seat	: new Number(result[1])
-									};
-								}
-								return null;
-							}
-				}
-			];
 
 			var li = -1;
-			for(var k in tests){
-				with(tests[k]){
+			for(var k in usernameTests){
+				with(usernameTests[k]){
 					li = name.lastIndexOf(str);
 					if(li > -1 && li === name.length - str.length){
 						return toRet( name.substring(0, li - 1).trimRight() );
@@ -184,9 +229,9 @@ action=
 				}
 			}
 
-			for(var k in testsRegex){
-				with(testsRegex[k]){
-					var r = toRet(name.match(pattern));
+			for(var k in usernameRegexes){
+				with(usernameRegexes[k]){
+					var r = toRet(name.match(pattern), name);
 					if(r !== null)
 						return r;
 				}
@@ -300,7 +345,9 @@ currency="USD" / "EUR"
 currencySymbol= "$" / "€" // "\u20AC"
 
 stakes=
-		s:value "/" b:value " " c:currency
+		s:value "/" b:value " - " cap:value " Cap -  " c:currency
+		{ return { small:s, big:b, cap:cap, currency:c}; }
+	/	s:value "/" b:value " " c:currency
 		{ return { small:s, big:b, currency:c}; }
 
 CCusername=
@@ -313,12 +360,13 @@ username=
 		{ return user; }
 
 // The amount of allowed chars is too damn high!
-usernamechar=[a-zA-Z0-9!_€$@#\.\-\=\*\+><&äëïöüãẽĩõũ ] / '"' / "'"
+// FIXME ':' and ',' are allowed!
+usernamechar=[a-zA-Z0-9!_€$%@#\.\-\=\*\+\|\/><&äëïöüãẽĩõũàèìòùáéíóúâêîôûÄËÏÖÜÃẼĨÕŨÀÈÌÒÙÁÉÍÓÚÂÊÎÔÛçÇåæ¤\?\(\)\^`´ ] / '"' / "'"
 
 tablename= cs:tablenamechar+
 		{ return cs.join('').trimRight(); }
 
-tablenamechar=[a-zA-Z0-9 ]
+tablenamechar=[a-zA-Z0-9\- ]
 
 digits=[0-9]
 number=

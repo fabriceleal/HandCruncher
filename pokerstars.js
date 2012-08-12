@@ -228,7 +228,10 @@ exports.parser = (function(){
           pos = clone(pos1);
         }
         if (result0 !== null) {
-          result0 = (function(offset, line, column, h) { return h;})(pos0.offset, pos0.line, pos0.column, result0[0]);
+          result0 = (function(offset, line, column, h) { 
+        			//parsed.emit('hand', h); 
+        			return h;
+        		})(pos0.offset, pos0.line, pos0.column, result0[0]);
         }
         if (result0 === null) {
           pos = clone(pos0);
@@ -646,7 +649,7 @@ exports.parser = (function(){
       }
       
       function parse_seatPresentation() {
-        var result0, result1, result2, result3, result4, result5, result6, result7;
+        var result0, result1, result2, result3, result4;
         var pos0, pos1;
         
         pos0 = clone(pos);
@@ -675,43 +678,9 @@ exports.parser = (function(){
             if (result2 !== null) {
               result3 = parse_username();
               if (result3 !== null) {
-                if (input.charCodeAt(pos.offset) === 40) {
-                  result4 = "(";
-                  advance(pos, 1);
-                } else {
-                  result4 = null;
-                  if (reportFailures === 0) {
-                    matchFailed("\"(\"");
-                  }
-                }
+                result4 = parse_wsNlStream();
                 if (result4 !== null) {
-                  result5 = parse_value();
-                  if (result5 !== null) {
-                    if (input.substr(pos.offset, 10) === " in chips)") {
-                      result6 = " in chips)";
-                      advance(pos, 10);
-                    } else {
-                      result6 = null;
-                      if (reportFailures === 0) {
-                        matchFailed("\" in chips)\"");
-                      }
-                    }
-                    if (result6 !== null) {
-                      result7 = parse_wsNlStream();
-                      if (result7 !== null) {
-                        result0 = [result0, result1, result2, result3, result4, result5, result6, result7];
-                      } else {
-                        result0 = null;
-                        pos = clone(pos1);
-                      }
-                    } else {
-                      result0 = null;
-                      pos = clone(pos1);
-                    }
-                  } else {
-                    result0 = null;
-                    pos = clone(pos1);
-                  }
+                  result0 = [result0, result1, result2, result3, result4];
                 } else {
                   result0 = null;
                   pos = clone(pos1);
@@ -733,7 +702,19 @@ exports.parser = (function(){
           pos = clone(pos1);
         }
         if (result0 !== null) {
-          result0 = (function(offset, line, column, seat, u, stack) { return { seat:seat, name:u, stack:stack}; })(pos0.offset, pos0.line, pos0.column, result0[1], result0[3], result0[5]);
+          result0 = (function(offset, line, column, seat, u) { 
+        
+        			for(var k in seatPresentationRegexes){
+        				with(seatPresentationRegexes[k]){
+        					var r = toRet(u.match(pattern), seat, u);
+        					if(r !== null)
+        						return r;
+        				}
+        			}
+        
+        			throw new Error("Invalid seat presentation! Matched '" + u + "' in (\"Seat \" seat:number \": \" u:username wsNlStream) (" + line + ", " + column + ")");
+        			//return { seat:seat, name:u, stack:stack};
+        		})(pos0.offset, pos0.line, pos0.column, result0[1], result0[3]);
         }
         if (result0 === null) {
           pos = clone(pos0);
@@ -1950,69 +1931,10 @@ exports.parser = (function(){
                           if (result0 !== null) {
                             result0 = (function(offset, line, column, name) {
                           			// (1)
-                          			var tests = [
-                          				{ str:"has timed out while disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
-                          				{ str:"has timed out while being disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
-                          				{ str:"leaves the table", toRet:function( u ){ return { tag:"leaves", user:u }}},
-                          				{ str:"will be allowed to play after the button", toRet:function( u ){ return { tag:"allowedAfterButton", user:u }}},
-                          				{ str:"was removed from the table for failing to post", toRet:function( u ){ return { tag:"removedAfterPostFail", user:u }}},
-                          				{ str:"is disconnected", toRet:function(u){ return { tag:"disconnected", user:u }}},
-                          				{ str:"has timed out", toRet:function(u){ return { tag:"timedOut", user:u }}},
-                          				{ str:"is connected", toRet:function(u){ return { tag:"connected", user:u }}}
-                          			];
-                          
-                          			var testsRegex = [
-                          				{ pattern:"collected [$€]([0-9]+(?:\.[0-9]+)?) from pot", toRet:function(result){
-                          						if(result){
-                          							return {
-                          								tag	: "collectsPot",
-                          								user	: name.substring(0, result.index - 1).trimRight(),
-                          								value	: new Number(result[1])
-                          							};
-                          						}
-                          						return null;
-                          					}
-                          				},
-                          				{ pattern:"collected [$€]([0-9]+(?:\.[0-9]+)?) from side pot", toRet:function(result){
-                          						if(result){
-                          							return {
-                          								tag	: "collectsSidePot",
-                          								user	: name.substring(0, result.index - 1).trimRight(),
-                          								value	: new Number(result[1])
-                          							};
-                          						}
-                          						return null;
-                          					}
-                          				},
-                          				{ pattern:"collected [$€]([0-9]+(?:\.[0-9]+)?) from main pot", toRet:function(result){
-                          						if(result){
-                          							return {
-                          								tag	: "collectsMainPot",
-                          								user	: name.substring(0, result.index - 1).trimRight(),
-                          								value	: new Number(result[1])
-                          							};
-                          						}
-                          						return null;
-                          					}
-                          				},
-                          				{
-                          					pattern:"joins the table at seat #([0-9]+)",
-                          					toRet:function(result){
-                          								if(result){
-                          									return {
-                          										tag	: "joins",
-                          										user	: name.substring(0, result.index - 1).trimRight(),
-                          										seat	: new Number(result[1])
-                          									};
-                          								}
-                          								return null;
-                          							}
-                          				}
-                          			];
                           
                           			var li = -1;
-                          			for(var k in tests){
-                          				with(tests[k]){
+                          			for(var k in usernameTests){
+                          				with(usernameTests[k]){
                           					li = name.lastIndexOf(str);
                           					if(li > -1 && li === name.length - str.length){
                           						return toRet( name.substring(0, li - 1).trimRight() );
@@ -2020,9 +1942,9 @@ exports.parser = (function(){
                           				}
                           			}
                           
-                          			for(var k in testsRegex){
-                          				with(testsRegex[k]){
-                          					var r = toRet(name.match(pattern));
+                          			for(var k in usernameRegexes){
+                          				with(usernameRegexes[k]){
+                          					var r = toRet(name.match(pattern), name);
                           					if(r !== null)
                           						return r;
                           				}
@@ -3033,7 +2955,7 @@ exports.parser = (function(){
       }
       
       function parse_stakes() {
-        var result0, result1, result2, result3, result4;
+        var result0, result1, result2, result3, result4, result5, result6;
         var pos0, pos1;
         
         pos0 = clone(pos);
@@ -3052,19 +2974,39 @@ exports.parser = (function(){
           if (result1 !== null) {
             result2 = parse_value();
             if (result2 !== null) {
-              if (input.charCodeAt(pos.offset) === 32) {
-                result3 = " ";
-                advance(pos, 1);
+              if (input.substr(pos.offset, 3) === " - ") {
+                result3 = " - ";
+                advance(pos, 3);
               } else {
                 result3 = null;
                 if (reportFailures === 0) {
-                  matchFailed("\" \"");
+                  matchFailed("\" - \"");
                 }
               }
               if (result3 !== null) {
-                result4 = parse_currency();
+                result4 = parse_value();
                 if (result4 !== null) {
-                  result0 = [result0, result1, result2, result3, result4];
+                  if (input.substr(pos.offset, 8) === " Cap -  ") {
+                    result5 = " Cap -  ";
+                    advance(pos, 8);
+                  } else {
+                    result5 = null;
+                    if (reportFailures === 0) {
+                      matchFailed("\" Cap -  \"");
+                    }
+                  }
+                  if (result5 !== null) {
+                    result6 = parse_currency();
+                    if (result6 !== null) {
+                      result0 = [result0, result1, result2, result3, result4, result5, result6];
+                    } else {
+                      result0 = null;
+                      pos = clone(pos1);
+                    }
+                  } else {
+                    result0 = null;
+                    pos = clone(pos1);
+                  }
                 } else {
                   result0 = null;
                   pos = clone(pos1);
@@ -3086,10 +3028,67 @@ exports.parser = (function(){
           pos = clone(pos1);
         }
         if (result0 !== null) {
-          result0 = (function(offset, line, column, s, b, c) { return { small:s, big:b, currency:c}; })(pos0.offset, pos0.line, pos0.column, result0[0], result0[2], result0[4]);
+          result0 = (function(offset, line, column, s, b, cap, c) { return { small:s, big:b, cap:cap, currency:c}; })(pos0.offset, pos0.line, pos0.column, result0[0], result0[2], result0[4], result0[6]);
         }
         if (result0 === null) {
           pos = clone(pos0);
+        }
+        if (result0 === null) {
+          pos0 = clone(pos);
+          pos1 = clone(pos);
+          result0 = parse_value();
+          if (result0 !== null) {
+            if (input.charCodeAt(pos.offset) === 47) {
+              result1 = "/";
+              advance(pos, 1);
+            } else {
+              result1 = null;
+              if (reportFailures === 0) {
+                matchFailed("\"/\"");
+              }
+            }
+            if (result1 !== null) {
+              result2 = parse_value();
+              if (result2 !== null) {
+                if (input.charCodeAt(pos.offset) === 32) {
+                  result3 = " ";
+                  advance(pos, 1);
+                } else {
+                  result3 = null;
+                  if (reportFailures === 0) {
+                    matchFailed("\" \"");
+                  }
+                }
+                if (result3 !== null) {
+                  result4 = parse_currency();
+                  if (result4 !== null) {
+                    result0 = [result0, result1, result2, result3, result4];
+                  } else {
+                    result0 = null;
+                    pos = clone(pos1);
+                  }
+                } else {
+                  result0 = null;
+                  pos = clone(pos1);
+                }
+              } else {
+                result0 = null;
+                pos = clone(pos1);
+              }
+            } else {
+              result0 = null;
+              pos = clone(pos1);
+            }
+          } else {
+            result0 = null;
+            pos = clone(pos1);
+          }
+          if (result0 !== null) {
+            result0 = (function(offset, line, column, s, b, c) { return { small:s, big:b, currency:c}; })(pos0.offset, pos0.line, pos0.column, result0[0], result0[2], result0[4]);
+          }
+          if (result0 === null) {
+            pos = clone(pos0);
+          }
         }
         return result0;
       }
@@ -3161,13 +3160,13 @@ exports.parser = (function(){
       function parse_usernamechar() {
         var result0;
         
-        if (/^[a-zA-Z0-9!_\u20AC$@#.\-=*+><&\xE4\xEB\xEF\xF6\xFC\xE3\u1EBD\u0129\xF5\u0169 ]/.test(input.charAt(pos.offset))) {
+        if (/^[a-zA-Z0-9!_\u20AC$%@#.\-=*+|\/><&\xE4\xEB\xEF\xF6\xFC\xE3\u1EBD\u0129\xF5\u0169\xE0\xE8\xEC\xF2\xF9\xE1\xE9\xED\xF3\xFA\xE2\xEA\xEE\xF4\xFB\xC4\xCB\xCF\xD6\xDC\xC3\u1EBC\u0128\xD5\u0168\xC0\xC8\xCC\xD2\xD9\xC1\xC9\xCD\xD3\xDA\xC2\xCA\xCE\xD4\xDB\xE7\xC7\xE5\xE6\xA4?()^`\xB4 ]/.test(input.charAt(pos.offset))) {
           result0 = input.charAt(pos.offset);
           advance(pos, 1);
         } else {
           result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[a-zA-Z0-9!_\\u20AC$@#.\\-=*+><&\\xE4\\xEB\\xEF\\xF6\\xFC\\xE3\\u1EBD\\u0129\\xF5\\u0169 ]");
+            matchFailed("[a-zA-Z0-9!_\\u20AC$%@#.\\-=*+|\\/><&\\xE4\\xEB\\xEF\\xF6\\xFC\\xE3\\u1EBD\\u0129\\xF5\\u0169\\xE0\\xE8\\xEC\\xF2\\xF9\\xE1\\xE9\\xED\\xF3\\xFA\\xE2\\xEA\\xEE\\xF4\\xFB\\xC4\\xCB\\xCF\\xD6\\xDC\\xC3\\u1EBC\\u0128\\xD5\\u0168\\xC0\\xC8\\xCC\\xD2\\xD9\\xC1\\xC9\\xCD\\xD3\\xDA\\xC2\\xCA\\xCE\\xD4\\xDB\\xE7\\xC7\\xE5\\xE6\\xA4?()^`\\xB4 ]");
           }
         }
         if (result0 === null) {
@@ -3222,13 +3221,13 @@ exports.parser = (function(){
       function parse_tablenamechar() {
         var result0;
         
-        if (/^[a-zA-Z0-9 ]/.test(input.charAt(pos.offset))) {
+        if (/^[a-zA-Z0-9\- ]/.test(input.charAt(pos.offset))) {
           result0 = input.charAt(pos.offset);
           advance(pos, 1);
         } else {
           result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[a-zA-Z0-9 ]");
+            matchFailed("[a-zA-Z0-9\\- ]");
           }
         }
         return result0;
@@ -3453,6 +3452,95 @@ exports.parser = (function(){
         return cleanExpected;
       }
       
+      
+      
+      	//this.parsed = {};
+      	//this.parsed.__proto__ = new (require('events').EventEmitter)();
+      
+      	//var parsed = this.parsed;
+      
+      	var seatPresentationRegexes = [
+      			{ 
+      				pattern	: new RegExp("\\([$€]([0-9]+(?:\\.[0-9]+)?) in chips\\)"), 
+      				toRet		: function(result, seat, user){
+      
+      					if(result){
+      						return {
+      							seat  : seat,
+      							user	: user.substring(0, result.index - 1).trimRight(),
+      							stack	: new Number(result[1])
+      						};
+      					}
+      					return null;
+      				}
+      			}
+      		]; // seatPresentationRegexes
+      
+      	var usernameRegexes = [
+      			{ 
+      				pattern:new RegExp("collected [$€]([0-9]+(?:\\.[0-9]+)?) from pot"), 
+      				toRet:function(result, name){
+      					if(result){
+      						return {
+      							tag	: "collectsPot",
+      							user	: name.substring(0, result.index - 1).trimRight(),
+      							value	: new Number(result[1])
+      						};
+      					}
+      					return null;
+      				}
+      			},
+      			{ 
+      				pattern:new RegExp("collected [$€]([0-9]+(?:\\.[0-9]+)?) from side pot"), 
+      				toRet:function(result, name){
+      					if(result){
+      						return {
+      							tag	: "collectsSidePot",
+      							user	: name.substring(0, result.index - 1).trimRight(),
+      							value	: new Number(result[1])
+      						};
+      					}
+      					return null;
+      				}
+      			},
+      			{ 
+      				pattern:new RegExp("collected [$€]([0-9]+(?:\\.[0-9]+)?) from main pot"), 
+      				toRet:function(result, name){
+      					if(result){
+      						return {
+      							tag	: "collectsMainPot",
+      							user	: name.substring(0, result.index - 1).trimRight(),
+      							value	: new Number(result[1])
+      						};
+      					}
+      					return null;
+      				}
+      			},
+      			{
+      				pattern:new RegExp("joins the table at seat #([0-9]+)"),
+      				toRet:function(result, name){
+      							if(result){
+      								return {
+      									tag	: "joins",
+      									user	: name.substring(0, result.index - 1).trimRight(),
+      									seat	: new Number(result[1])
+      								};
+      							}
+      							return null;
+      						}
+      			}
+      		];
+      	
+      	var usernameTests = [
+      			{ str:"has timed out while disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
+      			{ str:"has timed out while being disconnected", toRet:function( u ){ return { tag:"timeoutWhileDisc", user:u }}},
+      			{ str:"leaves the table", toRet:function( u ){ return { tag:"leaves", user:u }}},
+      			{ str:"will be allowed to play after the button", toRet:function( u ){ return { tag:"allowedAfterButton", user:u }}},
+      			{ str:"was removed from the table for failing to post", toRet:function( u ){ return { tag:"removedAfterPostFail", user:u }}},
+      			{ str:"is disconnected", toRet:function(u){ return { tag:"disconnected", user:u }}},
+      			{ str:"has timed out", toRet:function(u){ return { tag:"timedOut", user:u }}},
+      			{ str:"is connected", toRet:function(u){ return { tag:"connected", user:u }}}
+      		];
       
       
       var result = parseFunctions[startRule]();
