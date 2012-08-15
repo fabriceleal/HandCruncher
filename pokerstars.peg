@@ -384,6 +384,6 @@ value=
 
 wsNlStream	= wsNl*
 wsNl			= ws / nl
-ws				= [ /w/t]
+ws				= " " / "\t"
 nl				= "\n" / "\r" / "\r\n"
 

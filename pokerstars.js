@@ -3453,13 +3453,24 @@ exports.parser = (function(){
       function parse_ws() {
         var result0;
         
-        if (/^[ \/w\/t]/.test(input.charAt(pos.offset))) {
-          result0 = input.charAt(pos.offset);
+        if (input.charCodeAt(pos.offset) === 32) {
+          result0 = " ";
           advance(pos, 1);
         } else {
           result0 = null;
           if (reportFailures === 0) {
-            matchFailed("[ \\/w\\/t]");
+            matchFailed("\" \"");
+          }
+        }
+        if (result0 === null) {
+          if (input.charCodeAt(pos.offset) === 9) {
+            result0 = "\t";
+            advance(pos, 1);
+          } else {
+            result0 = null;
+            if (reportFailures === 0) {
+              matchFailed("\"\\t\"");
+            }
           }
         }
         return result0;
